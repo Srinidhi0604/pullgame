@@ -4,10 +4,10 @@ import Link from "next/link";
 import { useState } from "react";
 import { papers, type PaperTrack } from "@/data/papers";
 
-type ActiveTrack = PaperTrack | "all";
+type ActiveTrack = string;
 
 interface PapersBrowserProps {
-  initialTrack: ActiveTrack;
+  initialTrack: string;
 }
 
 const tagColors = [
@@ -24,16 +24,14 @@ const tagColors = [
   "#f43f5e",
 ];
 
-const trackLabels: Record<ActiveTrack, string> = {
-  all: "All",
+const trackLabels: Record<string, string> = {
+  all: "All Tracks",
   ml: "Machine Learning",
-  biology: "Biology",
-  chemistry: "Chemistry",
-  electrical: "Electrical Learning",
-  electronics: "Electronics Learning",
+  biochem: "Bio & Chemistry",
+  hardware: "Hardware & EE",
 };
 
-const trackOrder: PaperTrack[] = ["ml", "biology", "chemistry", "electrical", "electronics"];
+const trackOrder = ["ml", "biochem", "hardware"];
 
 const getTagColor = (tag: string) => {
   let hash = 0;
@@ -61,16 +59,21 @@ function getSummary(description: string) {
   return description.substring(0, 150) + "...";
 }
 
-function getTrack(paperTrack: PaperTrack | undefined): PaperTrack {
-  return paperTrack ?? "ml";
-}
-
 export function PapersBrowser({ initialTrack }: PapersBrowserProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTag, setActiveTag] = useState<string | null>(null);
-  const [activeTrack, setActiveTrack] = useState<ActiveTrack>(initialTrack);
+  const [activeTrack, setActiveTrack] = useState<string>(initialTrack === "all" ? "all" : initialTrack);
 
-  const trackFilteredPapers = papers.filter((paper) => activeTrack === "all" || getTrack(paper.track) === activeTrack);
+  const getConsolidatedTrack = (paperTrack: PaperTrack | undefined): string => {
+    const t = paperTrack ?? "ml";
+    if (t === "biology" || t === "chemistry") return "biochem";
+    if (t === "electrical" || t === "electronics") return "hardware";
+    return t;
+  };
+
+  const trackFilteredPapers = papers.filter((paper) => 
+    activeTrack === "all" || getConsolidatedTrack(paper.track) === activeTrack
+  );
   const allTags = Array.from(new Set(trackFilteredPapers.flatMap((paper) => paper.tags))).sort();
 
   const filteredPapers = trackFilteredPapers.filter((paper) => {
@@ -90,7 +93,7 @@ export function PapersBrowser({ initialTrack }: PapersBrowserProps) {
           .map((track) => ({
             track,
             title: trackLabels[track],
-            papers: filteredPapers.filter((paper) => getTrack(paper.track) === track),
+            papers: filteredPapers.filter((paper) => getConsolidatedTrack(paper.track) === track),
           }))
           .filter((section) => section.papers.length > 0)
       : [{ track: activeTrack, title: trackLabels[activeTrack], papers: filteredPapers }];
@@ -105,7 +108,7 @@ export function PapersBrowser({ initialTrack }: PapersBrowserProps) {
       </div>
 
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 24 }}>
-        {(Object.keys(trackLabels) as ActiveTrack[]).map((track) => (
+        {Object.keys(trackLabels).map((track) => (
           <button
             key={track}
             onClick={() => {
@@ -113,7 +116,7 @@ export function PapersBrowser({ initialTrack }: PapersBrowserProps) {
               setActiveTag(null);
             }}
             style={{
-              padding: "8px 14px",
+              padding: "8px 16px",
               borderRadius: 8,
               fontSize: 13,
               fontWeight: 700,
@@ -121,11 +124,12 @@ export function PapersBrowser({ initialTrack }: PapersBrowserProps) {
               background: activeTrack === track ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.03)",
               color: activeTrack === track ? "var(--text-primary)" : "var(--text-secondary)",
               border: activeTrack === track ? "1px solid rgba(255,255,255,0.18)" : "1px solid rgba(255,255,255,0.07)",
+              transition: "all 0.2s"
             }}
           >
             {trackLabels[track]}
-            <span style={{ color: "var(--text-muted)", marginLeft: 6 }}>
-              {track === "all" ? papers.length : papers.filter((paper) => getTrack(paper.track) === track).length}
+            <span style={{ color: "var(--text-muted)", marginLeft: 6, fontWeight: 500 }}>
+              {track === "all" ? papers.length : papers.filter((paper) => getConsolidatedTrack(paper.track) === track).length}
             </span>
           </button>
         ))}
@@ -180,28 +184,66 @@ export function PapersBrowser({ initialTrack }: PapersBrowserProps) {
         >
           All
         </button>
-        {allTags.map((tag) => {
-          const color = getTagColor(tag);
+        {(() => {
+          const MAX_TAGS = 10;
+          const [isExpanded, setIsExpanded] = useState(false);
+          
+          // Count occurrences of each tag to show most frequent ones
+          const tagCounts = trackFilteredPapers.flatMap(p => p.tags).reduce((acc, tag) => {
+            acc[tag] = (acc[tag] || 0) + 1;
+            return acc;
+          }, {} as Record<string, number>);
+          
+          const sortedTags = allTags.sort((a, b) => (tagCounts[b] || 0) - (tagCounts[a] || 0));
+          const visibleTags = isExpanded ? sortedTags : sortedTags.slice(0, MAX_TAGS);
+          const hasMore = sortedTags.length > MAX_TAGS;
+
           return (
-            <button
-              key={tag}
-              onClick={() => setActiveTag(tag === activeTag ? null : tag)}
-              style={{
-                padding: "4px 12px",
-                borderRadius: 16,
-                fontSize: 12,
-                fontWeight: 500,
-                cursor: "pointer",
-                background: activeTag === tag ? `${color}30` : "transparent",
-                color: activeTag === tag ? color : "var(--text-secondary)",
-                border: `1px solid ${activeTag === tag ? color : "transparent"}`,
-                transition: "all 0.2s",
-              }}
-            >
-              {tag}
-            </button>
+            <>
+              {visibleTags.map((tag) => {
+                const color = getTagColor(tag);
+                const isSelected = activeTag === tag;
+                return (
+                  <button
+                    key={tag}
+                    onClick={() => setActiveTag(isSelected ? null : tag)}
+                    style={{
+                      padding: "4px 12px",
+                      borderRadius: 16,
+                      fontSize: 12,
+                      fontWeight: 500,
+                      cursor: "pointer",
+                      background: isSelected ? `${color}30` : "transparent",
+                      color: isSelected ? color : "var(--text-secondary)",
+                      border: `1px solid ${isSelected ? color : "transparent"}`,
+                      transition: "all 0.2s",
+                    }}
+                  >
+                    {tag}
+                  </button>
+                );
+              })}
+              {hasMore && (
+                <button
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  style={{
+                    padding: "4px 12px",
+                    borderRadius: 16,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    background: "transparent",
+                    color: "var(--accent-cyan)",
+                    border: "1px solid rgba(0, 188, 212, 0.2)",
+                    marginLeft: 4
+                  }}
+                >
+                  {isExpanded ? "Show Less" : `+${sortedTags.length - MAX_TAGS} More`}
+                </button>
+              )}
+            </>
           );
-        })}
+        })()}
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: activeTrack === "all" ? 52 : 0 }}>
