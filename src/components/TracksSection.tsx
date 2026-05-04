@@ -20,12 +20,12 @@ export default function TracksSection() {
       link: "/papers?track=chemistry"
     },
     {
-      title: "Electrical Learning",
+      title: "Electrical",
       description: "Build power systems, control, machines, filters, and signal-processing implementations from papers.",
       link: "/papers?track=electrical"
     },
     {
-      title: "Electronics Learning",
+      title: "Electronics",
       description: "Practice HDLBits-style logic, CMOS, analog circuits, VLSI, memory devices, and processor design.",
       link: "/papers?track=electronics"
     }

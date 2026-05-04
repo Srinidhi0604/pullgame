@@ -27,11 +27,13 @@ const tagColors = [
 const trackLabels: Record<string, string> = {
   all: "All Tracks",
   ml: "Machine Learning",
-  biochem: "Bio & Chemistry",
-  hardware: "Hardware & EE",
+  biology: "Biology",
+  chemistry: "Chemistry",
+  electrical: "Electrical",
+  electronics: "Electronics",
 };
 
-const trackOrder = ["ml", "biochem", "hardware"];
+const trackOrder = ["ml", "biology", "chemistry", "electrical", "electronics"];
 
 const getTagColor = (tag: string) => {
   let hash = 0;
@@ -68,15 +70,8 @@ export function PapersBrowser({ initialTrack }: PapersBrowserProps) {
   const [activeTrack, setActiveTrack] = useState<string>(initialTrack === "all" ? "all" : initialTrack);
   const [isUploading, setIsUploading] = useState(false);
 
-  const getConsolidatedTrack = (paperTrack: PaperTrack | undefined): string => {
-    const t = paperTrack ?? "ml";
-    if (t === "biology" || t === "chemistry") return "biochem";
-    if (t === "electrical" || t === "electronics") return "hardware";
-    return t;
-  };
-
   const trackFilteredPapers = papers.filter((paper) => 
-    activeTrack === "all" || getConsolidatedTrack(paper.track) === activeTrack
+    activeTrack === "all" || (paper.track ?? "ml") === activeTrack
   );
   const allTags = Array.from(new Set(trackFilteredPapers.flatMap((paper) => paper.tags))).sort();
 
@@ -97,7 +92,7 @@ export function PapersBrowser({ initialTrack }: PapersBrowserProps) {
           .map((track) => ({
             track,
             title: trackLabels[track],
-            papers: filteredPapers.filter((paper) => getConsolidatedTrack(paper.track) === track),
+            papers: filteredPapers.filter((paper) => (paper.track ?? "ml") === track),
           }))
           .filter((section) => section.papers.length > 0)
       : [{ track: activeTrack, title: trackLabels[activeTrack], papers: filteredPapers }];
@@ -189,7 +184,7 @@ export function PapersBrowser({ initialTrack }: PapersBrowserProps) {
           >
             {trackLabels[track]}
             <span style={{ color: "var(--text-muted)", marginLeft: 6, fontWeight: 500 }}>
-              {track === "all" ? papers.length : papers.filter((paper) => getConsolidatedTrack(paper.track) === track).length}
+              {track === "all" ? papers.length : papers.filter((paper) => (paper.track ?? "ml") === track).length}
             </span>
           </button>
         ))}

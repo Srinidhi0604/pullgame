@@ -54,7 +54,6 @@ export default function HomePage() {
               from scratch
             </span>
             , line by line.
-            It is Leetcode for Research Papers.
           </p>
 
           <div>
@@ -67,27 +66,80 @@ export default function HomePage() {
         {/* Right side network graphic */}
         <div style={{ flex: "1 1 400px", display: "flex", justifyContent: "center", position: "relative" }}>
           <div style={{ position: "relative", width: 400, height: 400 }}>
-            <svg width="100%" height="100%" viewBox="0 0 400 400">
+            <svg width="100%" height="100%" viewBox="0 0 400 400" style={{ overflow: "visible" }}>
               {/* Edges */}
-              <line x1="200" y1="50" x2="300" y2="80" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
-              <line x1="200" y1="50" x2="100" y2="150" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
-              <line x1="300" y1="80" x2="400" y2="200" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
-              <line x1="100" y1="150" x2="200" y2="250" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
-              <line x1="200" y1="250" x2="300" y2="200" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
-              <line x1="300" y1="200" x2="400" y2="200" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
-              <line x1="100" y1="150" x2="100" y2="300" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
-              <line x1="100" y1="300" x2="200" y2="350" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
-              <line x1="200" y1="250" x2="200" y2="350" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
-              <line x1="200" y1="250" x2="300" y2="300" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
-              <line x1="300" y1="300" x2="400" y2="350" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
-              <line x1="400" y1="200" x2="400" y2="350" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
-              <line x1="200" y1="50" x2="200" y2="150" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
-              <line x1="300" y1="80" x2="200" y2="150" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
-              <line x1="300" y1="200" x2="300" y2="300" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
-              <line x1="200" y1="150" x2="300" y2="200" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
-              <line x1="200" y1="150" x2="100" y2="300" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
+              <line x1="200" y1="50" x2="300" y2="80" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+              <line x1="200" y1="50" x2="100" y2="150" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+              <line x1="300" y1="80" x2="400" y2="200" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+              <line x1="100" y1="150" x2="200" y2="250" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+              <line x1="200" y1="250" x2="300" y2="200" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+              <line x1="300" y1="200" x2="400" y2="200" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+              <line x1="100" y1="150" x2="100" y2="300" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+              <line x1="100" y1="300" x2="200" y2="350" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+              <line x1="200" y1="250" x2="200" y2="350" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+              <line x1="200" y1="250" x2="300" y2="300" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+              <line x1="300" y1="300" x2="400" y2="350" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+              <line x1="400" y1="200" x2="400" y2="350" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+              <line x1="200" y1="50" x2="200" y2="150" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+              <line x1="300" y1="80" x2="200" y2="150" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+              <line x1="300" y1="200" x2="300" y2="300" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+              <line x1="200" y1="150" x2="300" y2="200" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+              <line x1="200" y1="150" x2="100" y2="300" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
 
-              {/* White primary nodes */}
+              {/* Red and Blue indicator dots moving along paths (Shortened to not touch nodes) */}
+              <circle r="3" fill="#ef4444">
+                <animateMotion dur="3s" repeatCount="indefinite" path="M191.5,58.5 L108.5,141.5 L191.5,58.5" />
+              </circle>
+              <circle r="3" fill="#3b82f6">
+                <animateMotion dur="4s" repeatCount="indefinite" path="M211.5,53.5 L288.5,76.5 L211.5,53.5" />
+              </circle>
+              <circle r="3" fill="#ef4444">
+                <animateMotion dur="3.5s" repeatCount="indefinite" path="M307.7,89.2 L392.3,190.8 L307.7,89.2" />
+              </circle>
+              <circle r="3" fill="#3b82f6">
+                <animateMotion dur="4.5s" repeatCount="indefinite" path="M108.5,158.5 L191.5,241.5 L108.5,158.5" />
+              </circle>
+              <circle r="3" fill="#ef4444">
+                <animateMotion dur="3.2s" repeatCount="indefinite" path="M210.7,244.6 L289.3,205.4 L210.7,244.6" />
+              </circle>
+              <circle r="3" fill="#3b82f6">
+                <animateMotion dur="4.1s" repeatCount="indefinite" path="M312,200 L388,200 L312,200" />
+              </circle>
+              <circle r="3" fill="#ef4444">
+                <animateMotion dur="3.8s" repeatCount="indefinite" path="M100,162 L100,288 L100,162" />
+              </circle>
+              <circle r="3" fill="#3b82f6">
+                <animateMotion dur="4.2s" repeatCount="indefinite" path="M110.7,305.4 L189.3,344.6 L110.7,305.4" />
+              </circle>
+              <circle r="3" fill="#ef4444">
+                <animateMotion dur="3.6s" repeatCount="indefinite" path="M200,262 L200,338 L200,262" />
+              </circle>
+              <circle r="3" fill="#3b82f6">
+                <animateMotion dur="4.7s" repeatCount="indefinite" path="M210.7,255.4 L289.3,294.6 L210.7,255.4" />
+              </circle>
+              <circle r="3" fill="#ef4444">
+                <animateMotion dur="3.3s" repeatCount="indefinite" path="M310.7,305.4 L389.3,344.6 L310.7,305.4" />
+              </circle>
+              <circle r="3" fill="#3b82f6">
+                <animateMotion dur="4.8s" repeatCount="indefinite" path="M400,212 L400,338 L400,212" />
+              </circle>
+              <circle r="3" fill="#ef4444">
+                <animateMotion dur="3.9s" repeatCount="indefinite" path="M200,62 L200,138 L200,62" />
+              </circle>
+              <circle r="3" fill="#3b82f6">
+                <animateMotion dur="4.3s" repeatCount="indefinite" path="M290,87 L210,143 L290,87" />
+              </circle>
+              <circle r="3" fill="#ef4444">
+                <animateMotion dur="3.4s" repeatCount="indefinite" path="M300,212 L300,288 L300,212" />
+              </circle>
+              <circle r="3" fill="#3b82f6">
+                <animateMotion dur="4.6s" repeatCount="indefinite" path="M210.7,155.4 L289.3,194.6 L210.7,155.4" />
+              </circle>
+              <circle r="3" fill="#ef4444">
+                <animateMotion dur="3.7s" repeatCount="indefinite" path="M193.4,159.9 L106.6,290.1 L193.4,159.9" />
+              </circle>
+
+              {/* White primary nodes (Rendered ON TOP) */}
               <circle cx="200" cy="50" r="7" fill="white" />
               <circle cx="300" cy="80" r="7" fill="white" />
               <circle cx="100" cy="150" r="7" fill="white" />
@@ -99,50 +151,6 @@ export default function HomePage() {
               <circle cx="200" cy="350" r="7" fill="white" />
               <circle cx="300" cy="300" r="7" fill="white" />
               <circle cx="400" cy="350" r="7" fill="white" />
-
-              {/* Red and Blue indicator dots moving along paths */}
-              <circle r="3" fill="#ef4444">
-                <animateMotion dur="3s" repeatCount="indefinite" path="M200,50 L100,150 L200,50" />
-              </circle>
-              <circle r="3" fill="#3b82f6">
-                <animateMotion dur="4s" repeatCount="indefinite" path="M200,50 L300,80 L200,50" />
-              </circle>
-              <circle r="3" fill="#ef4444">
-                <animateMotion dur="3.5s" repeatCount="indefinite" path="M300,80 L400,200 L300,80" />
-              </circle>
-              <circle r="3" fill="#3b82f6">
-                <animateMotion dur="4.5s" repeatCount="indefinite" path="M100,150 L200,250 L100,150" />
-              </circle>
-              <circle r="3" fill="#ef4444">
-                <animateMotion dur="3.2s" repeatCount="indefinite" path="M200,250 L300,200 L200,250" />
-              </circle>
-              <circle r="3" fill="#3b82f6">
-                <animateMotion dur="4.1s" repeatCount="indefinite" path="M300,200 L400,200 L300,200" />
-              </circle>
-              <circle r="3" fill="#ef4444">
-                <animateMotion dur="3.8s" repeatCount="indefinite" path="M100,150 L100,300 L100,150" />
-              </circle>
-              <circle r="3" fill="#3b82f6">
-                <animateMotion dur="4.2s" repeatCount="indefinite" path="M100,300 L200,350 L100,300" />
-              </circle>
-              <circle r="3" fill="#ef4444">
-                <animateMotion dur="3.6s" repeatCount="indefinite" path="M200,250 L200,350 L200,250" />
-              </circle>
-              <circle r="3" fill="#3b82f6">
-                <animateMotion dur="4.7s" repeatCount="indefinite" path="M200,250 L300,300 L200,250" />
-              </circle>
-              <circle r="3" fill="#ef4444">
-                <animateMotion dur="3.3s" repeatCount="indefinite" path="M300,300 L400,350 L300,300" />
-              </circle>
-              <circle r="3" fill="#3b82f6">
-                <animateMotion dur="4.8s" repeatCount="indefinite" path="M400,200 L400,350 L400,200" />
-              </circle>
-              <circle r="3" fill="#ef4444">
-                <animateMotion dur="3.9s" repeatCount="indefinite" path="M200,50 L200,150 L200,50" />
-              </circle>
-              <circle r="3" fill="#3b82f6">
-                <animateMotion dur="4.3s" repeatCount="indefinite" path="M300,80 L200,150 L300,80" />
-              </circle>
             </svg>
           </div>
         </div>
