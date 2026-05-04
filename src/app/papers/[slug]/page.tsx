@@ -1,21 +1,21 @@
-import { papers, difficultyConfig, tagColors } from "@/data/papers";
+import { PaperVisual } from "@/components/PaperVisual";
+import { papers, difficultyConfig } from "@/data/papers";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 
 export function generateStaticParams() {
-  return papers.map((p) => ({ slug: p.slug }));
+  return papers.map((paper) => ({ slug: paper.slug }));
 }
 
 export default async function PaperDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const paper = papers.find((p) => p.slug === slug);
+  const paper = papers.find((item) => item.slug === slug);
   if (!paper) notFound();
 
   return (
-    <div style={{ maxWidth: 800, margin: "0 auto", padding: "40px 24px 80px" }}>
-      {/* Back link */}
+    <div style={{ maxWidth: 980, margin: "0 auto", padding: "40px 24px 80px" }}>
       <Link
-        href="/"
+        href="/papers"
         style={{
           color: "var(--text-muted)",
           fontSize: 13,
@@ -27,10 +27,9 @@ export default async function PaperDetailPage({ params }: { params: Promise<{ sl
           transition: "color 0.2s ease",
         }}
       >
-        ← Back to Papers
+        {"<- Back to Papers"}
       </Link>
 
-      {/* Paper Header */}
       <div className="animate-fade-in" style={{ marginBottom: 40 }}>
         <div
           style={{
@@ -48,30 +47,53 @@ export default async function PaperDetailPage({ params }: { params: Promise<{ sl
               fontWeight: 800,
               letterSpacing: "-0.02em",
               lineHeight: 1.2,
-              flex: 1,
+              flex: "1 1 520px",
             }}
           >
             {paper.title}
           </h1>
 
-          {/* Read Original button */}
-          <button
-            className="btn-secondary"
-            style={{
-              padding: "8px 18px",
-              fontSize: 13,
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              whiteSpace: "nowrap",
-              flexShrink: 0,
-            }}
-          >
-            📄 Read Original
-          </button>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+            {paper.sourceUrl && (
+              <a
+                href={paper.sourceUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="btn-secondary"
+                style={{
+                  padding: "8px 18px",
+                  fontSize: 13,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
+                  textDecoration: "none",
+                }}
+              >
+                Read Original
+              </a>
+            )}
+            {paper.repositoryUrl && (
+              <a
+                href={paper.repositoryUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="btn-secondary"
+                style={{
+                  padding: "8px 18px",
+                  fontSize: 13,
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
+                  textDecoration: "none",
+                }}
+              >
+                Repository
+              </a>
+            )}
+          </div>
         </div>
 
-        {/* Year + Authors as pills */}
         <div
           style={{
             display: "flex",
@@ -99,20 +121,40 @@ export default async function PaperDetailPage({ params }: { params: Promise<{ sl
           ))}
         </div>
 
-        {/* Description */}
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 20 }}>
+          {paper.tags.map((tag) => (
+            <span
+              key={tag}
+              style={{
+                padding: "3px 10px",
+                borderRadius: 12,
+                fontSize: 11,
+                fontWeight: 700,
+                background: "rgba(255,255,255,0.05)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                color: "var(--text-secondary)",
+              }}
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+
         <p
           style={{
             fontSize: 15,
             lineHeight: 1.7,
             color: "var(--text-secondary)",
+            maxWidth: 820,
           }}
         >
           {paper.description}
         </p>
       </div>
 
-      {/* Implementation Track */}
-      <div className="animate-slide-up">
+      <PaperVisual paper={paper} />
+
+      <div className="animate-slide-up" style={{ maxWidth: 820 }}>
         <div
           style={{
             display: "flex",
@@ -136,10 +178,9 @@ export default async function PaperDetailPage({ params }: { params: Promise<{ sl
           </span>
         </div>
 
-        {/* Task List */}
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {paper.tasks.map((task, i) => {
-            const dc = difficultyConfig[task.difficulty];
+          {paper.tasks.map((task, index) => {
+            const difficulty = difficultyConfig[task.difficulty];
             return (
               <Link
                 key={task.slug}
@@ -147,7 +188,6 @@ export default async function PaperDetailPage({ params }: { params: Promise<{ sl
                 style={{ textDecoration: "none", color: "inherit" }}
               >
                 <div className={`task-card task-card-${task.difficulty}`}>
-                  {/* Task number */}
                   <div style={{ flexShrink: 0, textAlign: "center", minWidth: 48 }}>
                     <div
                       style={{
@@ -169,11 +209,10 @@ export default async function PaperDetailPage({ params }: { params: Promise<{ sl
                         letterSpacing: "-0.02em",
                       }}
                     >
-                      {String(i + 1).padStart(2, "0")}
+                      {String(index + 1).padStart(2, "0")}
                     </div>
                   </div>
 
-                  {/* Task info */}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <h3
                       style={{
@@ -195,7 +234,6 @@ export default async function PaperDetailPage({ params }: { params: Promise<{ sl
                     </p>
                   </div>
 
-                  {/* Badges */}
                   <div
                     style={{
                       display: "flex",
@@ -225,11 +263,10 @@ export default async function PaperDetailPage({ params }: { params: Promise<{ sl
                         fontWeight: 600,
                       }}
                     >
-                      {dc.label}
+                      {difficulty.label}
                     </span>
                   </div>
 
-                  {/* Completion circle */}
                   <div className="completion-circle" />
                 </div>
               </Link>

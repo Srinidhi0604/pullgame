@@ -1,4 +1,13 @@
+import { bioChemPapers } from "./bioPapers";
+
 export type Difficulty = "easy" | "medium" | "hard";
+export type PaperTrack = "ml" | "biology" | "hardware";
+
+export interface PaperVisual {
+  variant: "deepchem" | "benchmark" | "molecule" | "protein" | "generative";
+  caption: string;
+  tools?: { label: string; href: string }[];
+}
 
 export interface Task {
   slug: string;
@@ -19,6 +28,10 @@ export interface Paper {
   tags: string[];
   description: string;
   tasks: Task[];
+  track?: PaperTrack;
+  sourceUrl?: string;
+  repositoryUrl?: string;
+  visual?: PaperVisual;
 }
 
 export const papers: Paper[] = [
@@ -703,6 +716,7 @@ def test_backprop():
       },
     ],
   },
+  ...bioChemPapers,
 ];
 
 export const difficultyConfig = {
@@ -726,6 +740,15 @@ export const tagColors: Record<string, string> = {
   "ML": "#ec4899",
   "Classification": "#d946ef",
   "Kernel Methods": "#a855f7",
+  "Biology": "#22c55e",
+  "Chemistry": "#06b6d4",
+  "DeepChem": "#14b8a6",
+  "MoleculeNet": "#0ea5e9",
+  "GraphConv": "#8b5cf6",
+  "Drug Discovery": "#f43f5e",
+  "Visualization": "#f59e0b",
+  "Generative Models": "#ec4899",
+  "Protein Ligand": "#a3e635",
 };
 
 // Helper to find a paper by slug

@@ -16,9 +16,8 @@ export default function TracksSection() {
       link: "/papers?track=hardware"
     },
     {
-      title: "Biology",
-      subtitle: "(Chemistry)",
-      description: "Unravel computational biology, bioinformatics, and molecular modeling through code.",
+      title: "Biology & Chemistry",
+      description: "Implement DeepChem workflows, molecular graphs, bioinformatics, and molecular visualization through code.",
       link: "/papers?track=biology"
     }
   ];
