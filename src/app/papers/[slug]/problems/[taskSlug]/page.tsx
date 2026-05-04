@@ -31,6 +31,7 @@ export default async function CodingPage({
       skeleton={task.skeleton}
       tests={task.tests}
       backHref={`/papers/${paper.slug}`}
+      taskSlug={taskSlug}
     />
   );
 }
