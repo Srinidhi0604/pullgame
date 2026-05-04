@@ -1,6 +1,9 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, lazy, Suspense } from "react";
+import { usePyodide } from "@/lib/usePyodide";
+
+const MonacoEditor = lazy(() => import("@monaco-editor/react"));
 
 interface CodingTerminalProps {
   title: string;
@@ -11,7 +14,53 @@ interface CodingTerminalProps {
   backHref: string;
 }
 
+interface TestResult {
+  name: string;
+  status: "passed" | "failed";
+  timeMs: number;
+  output: string;
+  error: string | null;
+}
+
+interface RunOutput {
+  kind: "plain" | "tests";
+  // for plain run
+  stdout?: string;
+  stderr?: string;
+  error?: string | null;
+  // for test run
+  testResults?: TestResult[];
+  totalPassed?: number;
+  totalFailed?: number;
+  totalMs?: number;
+  isSample?: boolean; // true when only first test was run
+}
+
 const diffLabels = { easy: "Easy", medium: "Medium", hard: "Hard" };
+const diffColors = { easy: "#10b981", medium: "#f59e0b", hard: "#ef4444" };
+
+// Python code injected to run tests and emit structured JSON
+const TEST_RUNNER_SUFFIX = `
+import json as _json, traceback as _tb, time as _time, sys as _sys, io as _io
+
+_test_results = []
+_test_fns = [(n, f) for n, f in list(globals().items()) if n.startswith("test_") and callable(f)]
+
+for _tname, _tfn in _test_fns:
+    _t0 = _time.time()
+    _buf = _io.StringIO()
+    _old = _sys.stdout
+    _sys.stdout = _buf
+    try:
+        _tfn()
+        _sys.stdout = _old
+        _test_results.append({"name": _tname, "status": "passed", "timeMs": round((_time.time()-_t0)*1000,1), "output": _buf.getvalue(), "error": None})
+    except Exception:
+        _sys.stdout = _old
+        _test_results.append({"name": _tname, "status": "failed", "timeMs": round((_time.time()-_t0)*1000,1), "output": _buf.getvalue(), "error": _tb.format_exc()})
+
+print("__TEST_JSON__:" + _json.dumps(_test_results))
+`;
 
 export function CodingTerminal({
   title,
@@ -22,41 +71,17 @@ export function CodingTerminal({
   backHref,
 }: CodingTerminalProps) {
   const [code, setCode] = useState(skeleton);
-  const [activeTab, setActiveTab] = useState<"description" | "output">("description");
-  const [output, setOutput] = useState<string | null>(null);
-  const [status, setStatus] = useState<"idle" | "running" | "passed" | "failed">("idle");
-  const [leftWidth, setLeftWidth] = useState(45);
+  const [activeLeftTab, setActiveLeftTab] = useState<"description" | "output">("description");
+  const [activeRightTab, setActiveRightTab] = useState<"solution" | "tests">("solution");
+  const [runStatus, setRunStatus] = useState<"idle" | "running" | "passed" | "failed">("idle");
+  const [output, setOutput] = useState<RunOutput | null>(null);
+  const [runKey, setRunKey] = useState(0); // incremented on each run to force re-mount of output
+  const [leftWidth, setLeftWidth] = useState(43);
   const [isResizing, setIsResizing] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const lineNumberRef = useRef<HTMLDivElement>(null);
 
-  // Sync scroll between textarea and line numbers
-  const handleEditorScroll = useCallback(() => {
-    if (textareaRef.current && lineNumberRef.current) {
-      lineNumberRef.current.scrollTop = textareaRef.current.scrollTop;
-    }
-  }, []);
+  const { status: pyStatus, runCode } = usePyodide();
 
-  // Line count
-  const lineCount = code.split("\n").length;
-
-  // Handle tab key in textarea
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Tab") {
-      e.preventDefault();
-      const textarea = e.currentTarget;
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const newCode = code.substring(0, start) + "    " + code.substring(end);
-      setCode(newCode);
-      setTimeout(() => {
-        textarea.selectionStart = textarea.selectionEnd = start + 4;
-      }, 0);
-    }
-  };
-
-  // Resizer logic
   const startResize = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     setIsResizing(true);
@@ -64,556 +89,374 @@ export function CodingTerminal({
 
   useEffect(() => {
     if (!isResizing) return;
-
-    const handleMouseMove = (e: MouseEvent) => {
+    const move = (e: MouseEvent) => {
       if (!containerRef.current) return;
-      const rect = containerRef.current.getBoundingClientRect();
-      const pct = ((e.clientX - rect.left) / rect.width) * 100;
-      setLeftWidth(Math.max(25, Math.min(75, pct)));
+      const r = containerRef.current.getBoundingClientRect();
+      setLeftWidth(Math.max(25, Math.min(70, ((e.clientX - r.left) / r.width) * 100)));
     };
-
-    const handleMouseUp = () => setIsResizing(false);
-
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
-    return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-    };
+    const up = () => setIsResizing(false);
+    document.addEventListener("mousemove", move);
+    document.addEventListener("mouseup", up);
+    return () => { document.removeEventListener("mousemove", move); document.removeEventListener("mouseup", up); };
   }, [isResizing]);
 
-  // Run tests (simulated)
-  const handleRun = () => {
-    setStatus("running");
+  // ── Run (execute code + first test case only) ──
+  const handleRun = async () => {
+    setActiveLeftTab("output");
+    setRunKey(k => k + 1); // force output panel re-mount
     setOutput(null);
-    setActiveTab("output");
+    if (pyStatus !== "ready") {
+      setOutput({ kind: "plain", stdout: "", stderr: "", error: "⏳ Python is still loading..." });
+      return;
+    }
+    setRunStatus("running");
 
-    setTimeout(() => {
-      // Check if user has written any code beyond the skeleton
-      const hasImplementation =
-        !code.includes("raise NotImplementedError") &&
-        !code.includes("# YOUR CODE HERE") &&
-        code.trim() !== skeleton.trim();
+    // Build a runner that picks only the FIRST test_ function
+    const singleTestRunner = `
+import json as _json, traceback as _tb, time as _time, sys as _sys, io as _io
 
-      if (hasImplementation) {
-        setStatus("passed");
-        setOutput(
-          "✓ All tests passed!\n\n" +
-          "  test_shape_check ............... PASSED  (0.12s)\n" +
-          "  test_value_check ............... PASSED  (0.08s)\n" +
-          "  test_edge_cases ................ PASSED  (0.15s)\n\n" +
-          "  ─────────────────────────────────────────\n" +
-          "  3 passed in 0.35s"
-        );
-      } else {
-        setStatus("failed");
-        setOutput(
-          "✗ Tests failed\n\n" +
-          "  test_shape_check ............... FAILED  (0.04s)\n\n" +
-          "  NotImplementedError: \n" +
-          "  Your function has not been implemented yet.\n" +
-          "  Replace `raise NotImplementedError` with your solution.\n\n" +
-          "  ─────────────────────────────────────────\n" +
-          "  0 passed, 1 failed in 0.04s"
-        );
-      }
-    }, 2000);
+_test_results = []
+_test_fns = [(n, f) for n, f in list(globals().items()) if n.startswith("test_") and callable(f)]
+
+# Run only the first test case for "Run"
+if _test_fns:
+    _tname, _tfn = _test_fns[0]
+    _t0 = _time.time()
+    _buf = _io.StringIO()
+    _old = _sys.stdout
+    _sys.stdout = _buf
+    try:
+        _tfn()
+        _sys.stdout = _old
+        _test_results.append({"name": _tname, "status": "passed", "timeMs": round((_time.time()-_t0)*1000,1), "output": _buf.getvalue(), "error": None})
+    except Exception:
+        _sys.stdout = _old
+        _test_results.append({"name": _tname, "status": "failed", "timeMs": round((_time.time()-_t0)*1000,1), "output": _buf.getvalue(), "error": _tb.format_exc()})
+
+print("__TEST_JSON__:" + _json.dumps(_test_results))
+`;
+
+    const codeToRun = `${code}\n\n${tests}\n\n${singleTestRunner}`;
+    const result = await runCode(codeToRun);
+
+    const marker = "__TEST_JSON__:";
+    const markerIdx = (result.stdout ?? "").indexOf(marker);
+    if (markerIdx !== -1) {
+      try {
+        const json = result.stdout!.slice(markerIdx + marker.length).split("\n")[0];
+        const testResults: TestResult[] = JSON.parse(json);
+        const passed = testResults.filter(t => t.status === "passed").length;
+        const failed = testResults.filter(t => t.status === "failed").length;
+        const totalMs = testResults.reduce((s, t) => s + t.timeMs, 0);
+        setRunStatus(failed > 0 ? "failed" : "passed");
+        setOutput({ kind: "tests", testResults, totalPassed: passed, totalFailed: failed, totalMs, isSample: true });
+        return;
+      } catch { /* fall through */ }
+    }
+
+    // fallback to plain output
+    setRunStatus(result.error ? "failed" : "passed");
+    setOutput({ kind: "plain", stdout: result.stdout, stderr: result.stderr, error: result.error });
   };
 
-  const handleSubmit = () => {
-    handleRun();
+  // ── Submit (run code + tests, parse structured JSON results) ──
+  const handleSubmit = async () => {
+    setActiveLeftTab("output");
+    setRunKey(k => k + 1); // force output panel re-mount
+    setOutput(null);
+    if (pyStatus !== "ready") {
+      setOutput({ kind: "plain", stdout: "", stderr: "", error: "⏳ Python is still loading..." });
+      return;
+    }
+    setRunStatus("running");
+
+    const codeToRun = `${code}\n\n${tests}\n\n${TEST_RUNNER_SUFFIX}`;
+    const result = await runCode(codeToRun);
+
+    // Parse structured JSON from stdout
+    const marker = "__TEST_JSON__:";
+    const markerIdx = (result.stdout ?? "").indexOf(marker);
+    if (markerIdx !== -1) {
+      try {
+        const json = result.stdout!.slice(markerIdx + marker.length).split("\n")[0];
+        const testResults: TestResult[] = JSON.parse(json);
+        const passed = testResults.filter(t => t.status === "passed").length;
+        const failed = testResults.filter(t => t.status === "failed").length;
+        const totalMs = testResults.reduce((s, t) => s + t.timeMs, 0);
+        setRunStatus(failed > 0 ? "failed" : "passed");
+        setOutput({ kind: "tests", testResults, totalPassed: passed, totalFailed: failed, totalMs });
+        return;
+      } catch {
+        // fall through to plain output
+      }
+    }
+
+    // If JSON parsing failed, show raw output
+    setRunStatus(result.error ? "failed" : "passed");
+    setOutput({ kind: "plain", stdout: result.stdout, stderr: result.stderr, error: result.error });
   };
 
   const handleReset = () => {
     setCode(skeleton);
+    setRunStatus("idle");
     setOutput(null);
-    setStatus("idle");
-    setActiveTab("description");
+    setActiveLeftTab("description");
   };
 
-  // Parse markdown description into simple rendered HTML
+  // ── Markdown renderer ──
   const renderDescription = (md: string) => {
     const lines = md.split("\n");
     const elements: React.ReactNode[] = [];
-    let inCodeBlock = false;
-    let codeBlockContent: string[] = [];
-    let listItems: string[] = [];
-
-    const flushList = () => {
-      if (listItems.length > 0) {
-        elements.push(
-          <ul key={`ul-${elements.length}`} style={{ paddingLeft: 20, margin: "8px 0" }}>
-            {listItems.map((item, i) => (
-              <li key={i} style={{ fontSize: 14, lineHeight: 1.8, color: "var(--text-secondary)", marginBottom: 4 }}>
-                {item}
-              </li>
-            ))}
-          </ul>
-        );
-        listItems = [];
-      }
-    };
-
+    let inCode = false;
+    let codeLines: string[] = [];
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-
       if (line.startsWith("```")) {
-        if (inCodeBlock) {
-          elements.push(
-            <pre
-              key={`code-${elements.length}`}
-              style={{
-                background: "rgba(0,0,0,0.4)",
-                border: "1px solid var(--glass-border)",
-                borderRadius: 8,
-                padding: 16,
-                margin: "12px 0",
-                overflowX: "auto",
-                fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-                fontSize: 13,
-                lineHeight: 1.5,
-                color: "#e2e8f0",
-              }}
-            >
-              <code>{codeBlockContent.join("\n")}</code>
-            </pre>
-          );
-          codeBlockContent = [];
-          inCodeBlock = false;
-        } else {
-          flushList();
-          inCodeBlock = true;
-        }
+        if (inCode) {
+          elements.push(<pre key={i} style={{ background: "#0d0d0d", border: "1px solid #222", borderRadius: 6, padding: "12px 14px", margin: "10px 0", overflowX: "auto", fontFamily: "var(--font-mono)", fontSize: 12.5, lineHeight: 1.6, color: "#e2e8f0" }}><code>{codeLines.join("\n")}</code></pre>);
+          codeLines = []; inCode = false;
+        } else { inCode = true; }
         continue;
       }
-
-      if (inCodeBlock) {
-        codeBlockContent.push(line);
-        continue;
-      }
-
-      // Headers
-      if (line.startsWith("# ")) {
-        flushList();
-        continue; // Skip h1, we show title separately
-      }
-      if (line.startsWith("## ")) {
-        flushList();
-        elements.push(
-          <h2
-            key={`h2-${elements.length}`}
-            style={{
-              fontSize: 18,
-              fontWeight: 700,
-              margin: "28px 0 12px",
-              color: "var(--text-primary)",
-            }}
-          >
-            {line.replace("## ", "")}
-          </h2>
-        );
-        continue;
-      }
-      if (line.startsWith("### ")) {
-        flushList();
-        elements.push(
-          <h3
-            key={`h3-${elements.length}`}
-            style={{
-              fontSize: 15,
-              fontWeight: 600,
-              margin: "20px 0 8px",
-              color: "var(--text-primary)",
-            }}
-          >
-            {line.replace("### ", "")}
-          </h3>
-        );
-        continue;
-      }
-
-      // List items
-      if (/^[\-\*]\s/.test(line) || /^\d+\.\s/.test(line)) {
-        const content = line.replace(/^[\-\*]\s/, "").replace(/^\d+\.\s/, "");
-        listItems.push(content);
-        continue;
-      }
-
-      // Empty line
-      if (line.trim() === "") {
-        flushList();
-        continue;
-      }
-
-      // Paragraph
-      flushList();
-      // Inline code
-      const rendered = line.split(/(`[^`]+`)/).map((part, j) => {
-        if (part.startsWith("`") && part.endsWith("`")) {
-          return (
-            <code
-              key={j}
-              style={{
-                background: "rgba(255,255,255,0.06)",
-                padding: "2px 6px",
-                borderRadius: 4,
-                fontFamily: "'JetBrains Mono', monospace",
-                fontSize: 13,
-                color: "var(--accent-cyan)",
-              }}
-            >
-              {part.slice(1, -1)}
-            </code>
-          );
-        }
-        // Bold
-        return part.split(/(\*\*[^*]+\*\*)/).map((sub, k) => {
-          if (sub.startsWith("**") && sub.endsWith("**")) {
-            return <strong key={`${j}-${k}`}>{sub.slice(2, -2)}</strong>;
-          }
-          return sub;
-        });
+      if (inCode) { codeLines.push(line); continue; }
+      if (line.startsWith("# ")) continue;
+      if (line.startsWith("## ")) { elements.push(<h2 key={i} style={{ fontSize: 14, fontWeight: 700, margin: "22px 0 6px", color: "#fff", borderBottom: "1px solid #1e1e1e", paddingBottom: 5 }}>{line.slice(3)}</h2>); continue; }
+      if (line.startsWith("### ")) { elements.push(<h3 key={i} style={{ fontSize: 13, fontWeight: 600, margin: "14px 0 4px", color: "#ccc" }}>{line.slice(4)}</h3>); continue; }
+      if (/^[-*]\s/.test(line)) { elements.push(<li key={i} style={{ fontSize: 13, lineHeight: 1.8, color: "#aaa", marginLeft: 18 }}>{line.replace(/^[-*]\s/, "")}</li>); continue; }
+      if (!line.trim()) { elements.push(<div key={i} style={{ height: 5 }} />); continue; }
+      const parts = line.split(/(`[^`]+`)/).map((p, j) => {
+        if (p.startsWith("`") && p.endsWith("`")) return <code key={j} style={{ background: "rgba(255,255,255,0.06)", padding: "1px 5px", borderRadius: 3, fontFamily: "var(--font-mono)", fontSize: 12, color: "#7dd3fc" }}>{p.slice(1, -1)}</code>;
+        return p.split(/(\*\*[^*]+\*\*)/).map((s, k) => s.startsWith("**") && s.endsWith("**") ? <strong key={k} style={{ color: "#e2e8f0" }}>{s.slice(2, -2)}</strong> : s);
       });
-
-      elements.push(
-        <p
-          key={`p-${elements.length}`}
-          style={{ fontSize: 14, lineHeight: 1.8, color: "var(--text-secondary)", margin: "8px 0" }}
-        >
-          {rendered}
-        </p>
-      );
+      elements.push(<p key={i} style={{ fontSize: 13.5, lineHeight: 1.8, color: "#999", margin: "3px 0" }}>{parts}</p>);
     }
-    flushList();
     return elements;
   };
 
-  return (
-    <div ref={containerRef} className="coding-terminal" style={{ userSelect: isResizing ? "none" : "auto" }}>
-      {/* ===== LEFT PANEL ===== */}
-      <div className="coding-terminal-left" style={{ flex: `0 0 ${leftWidth}%` }}>
-        {/* Left Top Bar */}
-        <div className="coding-topbar">
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <a
-              href={backHref}
-              style={{
-                color: "var(--text-muted)",
-                textDecoration: "none",
-                fontSize: 18,
-                display: "flex",
-                alignItems: "center",
-              }}
-            >
-              ←
-            </a>
-            <span style={{ fontWeight: 700, fontSize: 15, color: "var(--accent-cyan)" }}>
-              {title}
-            </span>
-            <span
-              className={`badge-${difficulty}`}
-              style={{ padding: "2px 10px", borderRadius: 4, fontSize: 11, fontWeight: 600 }}
-            >
-              {diffLabels[difficulty]}
-            </span>
+  // ── Render output panel ──
+  const renderOutput = () => {
+    if (runStatus === "running") {
+      return (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: 14 }}>
+          <div style={{ width: 28, height: 28, border: "3px solid #222", borderTopColor: "#fff", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
+          <span style={{ color: "#555", fontSize: 13 }}>Running...</span>
+        </div>
+      );
+    }
+
+    if (!output) {
+      return (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: 8 }}>
+          <span style={{ fontSize: 32, opacity: 0.15 }}>▶</span>
+          <span style={{ color: "#444", fontSize: 13 }}>Run or submit your code to see results.</span>
+        </div>
+      );
+    }
+
+    if (output.kind === "plain") {
+      const hasError = !!output.error || !!output.stderr;
+      return (
+        <div style={{ padding: "20px 24px", overflow: "auto", height: "100%", fontFamily: "var(--font-mono)", fontSize: 12.5 }}>
+          {/* Status banner */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16, padding: "10px 14px", borderRadius: 6, background: hasError ? "rgba(239,68,68,0.08)" : "rgba(16,185,129,0.08)", border: `1px solid ${hasError ? "#ef444433" : "#10b98133"}` }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: hasError ? "#ef4444" : "#10b981", flexShrink: 0 }} />
+            <span style={{ fontWeight: 700, color: hasError ? "#ef4444" : "#10b981", fontSize: 13 }}>{hasError ? "Error" : "Code Ran Successfully"}</span>
           </div>
 
-          {/* Tabs */}
-          <div style={{ display: "flex", gap: 4 }}>
-            <button
-              className={`coding-tab ${activeTab === "description" ? "coding-tab-active" : ""}`}
-              onClick={() => setActiveTab("description")}
-            >
-              📄 Description
-            </button>
-            <button
-              className={`coding-tab ${activeTab === "output" ? "coding-tab-active" : ""}`}
-              onClick={() => setActiveTab("output")}
-            >
-              📤 Output
-              {status === "passed" && (
-                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent-green)", display: "inline-block" }} />
+          {output.stdout && (
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 11, color: "#555", marginBottom: 6, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase" }}>Output</div>
+              <pre style={{ background: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: 6, padding: "10px 14px", color: "#e2e8f0", whiteSpace: "pre-wrap", margin: 0, lineHeight: 1.7 }}>{output.stdout}</pre>
+            </div>
+          )}
+          {(output.error || output.stderr) && (
+            <div>
+              <div style={{ fontSize: 11, color: "#ef4444", marginBottom: 6, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase" }}>Traceback</div>
+              <pre style={{ background: "rgba(239,68,68,0.05)", border: "1px solid rgba(239,68,68,0.15)", borderRadius: 6, padding: "10px 14px", color: "#fca5a5", whiteSpace: "pre-wrap", margin: 0, lineHeight: 1.7 }}>{output.error ?? output.stderr}</pre>
+            </div>
+          )}
+          {!output.stdout && !output.error && !output.stderr && (
+            <div style={{ color: "#444", fontSize: 13 }}>(no output)</div>
+          )}
+        </div>
+      );
+    }
+
+    // ── Test results view ──
+    const { testResults = [], totalPassed = 0, totalFailed = 0, totalMs = 0 } = output;
+    const allPassed = totalFailed === 0;
+
+    return (
+      <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
+        {/* Summary banner */}
+        <div style={{ padding: "16px 24px", borderBottom: "1px solid #111", flexShrink: 0, background: allPassed ? "rgba(16,185,129,0.05)" : "rgba(239,68,68,0.05)" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: 22 }}>{allPassed ? "✓" : "✗"}</span>
+              <div>
+                <div style={{ fontWeight: 800, fontSize: 16, color: allPassed ? "#10b981" : "#ef4444" }}>
+                  {output.isSample
+                    ? (allPassed ? "Sample Test Passed" : "Sample Test Failed")
+                    : (allPassed ? "All Tests Passed" : `${totalFailed} Test${totalFailed > 1 ? "s" : ""} Failed`)}
+                </div>
+                <div style={{ fontSize: 12, color: "#555", marginTop: 2 }}>
+                  {output.isSample ? "Ran 1 sample test case" : `${totalPassed}/${testResults.length} passed`} · {totalMs.toFixed(1)}ms
+                </div>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              {totalPassed > 0 && (
+                <div style={{ padding: "4px 12px", borderRadius: 20, background: "rgba(16,185,129,0.12)", border: "1px solid rgba(16,185,129,0.2)", fontSize: 12, fontWeight: 700, color: "#10b981" }}>
+                  {totalPassed} passed
+                </div>
               )}
-              {status === "failed" && (
-                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent-red)", display: "inline-block" }} />
+              {totalFailed > 0 && (
+                <div style={{ padding: "4px 12px", borderRadius: 20, background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.2)", fontSize: 12, fontWeight: 700, color: "#ef4444" }}>
+                  {totalFailed} failed
+                </div>
               )}
-            </button>
+            </div>
           </div>
         </div>
 
-        {/* Left Content */}
-        {activeTab === "description" ? (
+        {/* Individual test cases */}
+        <div style={{ flex: 1, overflow: "auto", padding: "12px 24px 24px" }}>
+          {testResults.map((t, i) => (
+            <TestCard key={i} test={t} index={i} />
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const pyStatusColor = { idle: "#555", loading: "#f59e0b", ready: "#10b981", error: "#ef4444" }[pyStatus];
+
+  return (
+    <div ref={containerRef} className="coding-terminal" style={{ userSelect: isResizing ? "none" : "auto" }}>
+      {/* ===== LEFT ===== */}
+      <div className="coding-terminal-left" style={{ flex: `0 0 ${leftWidth}%` }}>
+        <div className="coding-topbar">
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <a href={backHref} style={{ color: "#555", textDecoration: "none", fontSize: 18, lineHeight: 1 }}>←</a>
+            <span style={{ fontWeight: 700, fontSize: 14 }}>{title}</span>
+            <span style={{ padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 700, color: diffColors[difficulty], border: `1px solid ${diffColors[difficulty]}33`, background: `${diffColors[difficulty]}11` }}>{diffLabels[difficulty]}</span>
+          </div>
+          <div style={{ display: "flex", gap: 2 }}>
+            {(["description", "output"] as const).map(tab => (
+              <button key={tab} onClick={() => setActiveLeftTab(tab)} style={{ padding: "4px 12px", borderRadius: 5, fontSize: 12, fontWeight: 500, cursor: "pointer", background: activeLeftTab === tab ? "rgba(255,255,255,0.07)" : "transparent", border: "none", color: activeLeftTab === tab ? "#fff" : "#555", transition: "all 0.15s", display: "flex", alignItems: "center", gap: 5 }}>
+                {tab === "output" && runStatus === "passed" && <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#10b981" }} />}
+                {tab === "output" && runStatus === "failed" && <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#ef4444" }} />}
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {activeLeftTab === "description" ? (
           <div className="description-panel">
-            <h1
-              style={{
-                fontSize: 24,
-                fontWeight: 800,
-                marginBottom: 4,
-                letterSpacing: "-0.02em",
-              }}
-            >
-              {title}
-            </h1>
+            <h1 style={{ fontSize: 21, fontWeight: 800, marginBottom: 4, letterSpacing: "-0.02em" }}>{title}</h1>
             {renderDescription(description)}
           </div>
         ) : (
-          <div style={{ padding: 24 }}>
-            {output ? (
-              <div>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    marginBottom: 16,
-                    padding: "12px 16px",
-                    borderRadius: 8,
-                    background:
-                      status === "passed"
-                        ? "rgba(16, 185, 129, 0.08)"
-                        : "rgba(239, 68, 68, 0.08)",
-                    border: `1px solid ${
-                      status === "passed"
-                        ? "rgba(16, 185, 129, 0.2)"
-                        : "rgba(239, 68, 68, 0.2)"
-                    }`,
-                  }}
-                >
-                  <span
-                    style={{
-                      width: 10,
-                      height: 10,
-                      borderRadius: "50%",
-                      background:
-                        status === "passed" ? "var(--accent-green)" : "var(--accent-red)",
-                    }}
-                  />
-                  <span
-                    style={{
-                      fontSize: 14,
-                      fontWeight: 700,
-                      color:
-                        status === "passed" ? "var(--accent-green)" : "var(--accent-red)",
-                    }}
-                  >
-                    {status === "passed" ? "All Tests Passed" : "Tests Failed"}
-                  </span>
-                </div>
-                <pre
-                  style={{
-                    fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-                    fontSize: 13,
-                    lineHeight: 1.7,
-                    color: "var(--text-secondary)",
-                    whiteSpace: "pre-wrap",
-                    margin: 0,
-                    background: "rgba(0,0,0,0.2)",
-                    padding: 16,
-                    borderRadius: 8,
-                    border: "1px solid var(--glass-border)",
-                  }}
-                >
-                  {output}
-                </pre>
-              </div>
-            ) : status === "running" ? (
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  padding: "60px 0",
-                  gap: 16,
-                }}
-              >
-                <div
-                  style={{
-                    width: 32,
-                    height: 32,
-                    border: "3px solid rgba(255,255,255,0.1)",
-                    borderTopColor: "var(--accent-cyan)",
-                    borderRadius: "50%",
-                    animation: "spin 0.8s linear infinite",
-                  }}
-                />
-                <span style={{ fontSize: 14, color: "var(--text-muted)" }}>
-                  Running tests...
-                </span>
-              </div>
-            ) : (
-              <div
-                style={{
-                  textAlign: "center",
-                  padding: "60px 0",
-                  color: "var(--text-muted)",
-                }}
-              >
-                <p style={{ fontSize: 14 }}>Run your code to see output here</p>
-              </div>
-            )}
+          <div key={runKey} style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+            {renderOutput()}
           </div>
         )}
       </div>
 
       {/* ===== RESIZER ===== */}
-      <div
-        className={`resizer ${isResizing ? "active" : ""}`}
-        onMouseDown={startResize}
-      />
+      <div className={`resizer ${isResizing ? "active" : ""}`} onMouseDown={startResize} />
 
-      {/* ===== RIGHT PANEL ===== */}
+      {/* ===== RIGHT ===== */}
       <div className="coding-terminal-right">
-        {/* Right Top Bar */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "10px 16px",
-            borderBottom: "1px solid rgba(255,255,255,0.06)",
-            background: "rgba(13, 17, 23, 0.95)",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 600 }}>
-              solution.py
-            </span>
-            <span
-              style={{
-                fontSize: 10,
-                padding: "2px 8px",
-                borderRadius: 4,
-                background: "rgba(168, 85, 247, 0.15)",
-                color: "var(--accent-purple)",
-                fontWeight: 600,
-              }}
-            >
-              Python
-            </span>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 16px", borderBottom: "1px solid #111", background: "#070707", flexShrink: 0 }}>
+          <div style={{ display: "flex", gap: 2 }}>
+            {(["solution", "tests"] as const).map(tab => (
+              <button key={tab} onClick={() => setActiveRightTab(tab)} style={{ padding: "4px 12px", borderRadius: 5, fontSize: 12, fontWeight: 500, cursor: "pointer", background: activeRightTab === tab ? "rgba(255,255,255,0.07)" : "transparent", border: "none", color: activeRightTab === tab ? "#fff" : "#444", transition: "all 0.15s" }}>
+                {tab === "solution" ? "solution.py" : "test.py"}
+              </button>
+            ))}
           </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button
-              onClick={handleReset}
-              style={{
-                padding: "5px 12px",
-                borderRadius: 6,
-                fontSize: 11,
-                fontWeight: 600,
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                color: "var(--text-secondary)",
-                cursor: "pointer",
-                transition: "all 0.2s ease",
-              }}
-            >
-              ↺ Reset
+
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 11, color: pyStatusColor, display: "flex", alignItems: "center", gap: 5 }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: pyStatusColor, animation: pyStatus === "loading" ? "pulse 1.5s infinite" : "none" }} />
+              {{ idle: "Loading...", loading: "Loading Python...", ready: "Python Ready", error: "Load Failed" }[pyStatus]}
+            </span>
+            <button onClick={handleReset} style={{ padding: "4px 10px", borderRadius: 5, fontSize: 11, fontWeight: 600, background: "rgba(255,255,255,0.04)", border: "1px solid #1a1a1a", color: "#555", cursor: "pointer" }}>↺</button>
+            <button onClick={handleRun} disabled={runStatus === "running"} style={{ padding: "5px 16px", borderRadius: 5, fontSize: 12, fontWeight: 600, background: "#111", border: "1px solid #222", color: runStatus === "running" ? "#444" : "#fff", cursor: runStatus === "running" ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: 5, transition: "all 0.15s" }}>
+              {runStatus === "running" ? <><span style={{ width: 10, height: 10, border: "2px solid #333", borderTopColor: "#fff", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} /> Running</> : "▶ Run"}
             </button>
-            <button
-              className="btn-run"
-              onClick={handleRun}
-              disabled={status === "running"}
-              style={{ opacity: status === "running" ? 0.6 : 1 }}
-            >
-              {status === "running" ? (
-                <>
-                  <span
-                    style={{
-                      width: 12,
-                      height: 12,
-                      border: "2px solid rgba(255,255,255,0.2)",
-                      borderTopColor: "white",
-                      borderRadius: "50%",
-                      display: "inline-block",
-                      animation: "spin 0.8s linear infinite",
-                    }}
-                  />
-                  Running...
-                </>
-              ) : (
-                <>▶ Run</>
-              )}
-            </button>
-            <button className="btn-submit" onClick={handleSubmit} disabled={status === "running"}>
+            <button onClick={handleSubmit} disabled={runStatus === "running"} style={{ padding: "5px 16px", borderRadius: 5, fontSize: 12, fontWeight: 700, cursor: runStatus === "running" ? "not-allowed" : "pointer", background: runStatus === "passed" ? "#10b981" : runStatus === "failed" ? "#ef4444" : "#1a1a1a", border: `1px solid ${runStatus === "passed" ? "#10b981" : runStatus === "failed" ? "#ef4444" : "#333"}`, color: (runStatus === "passed" || runStatus === "failed") ? "#000" : "#ccc", transition: "all 0.2s" }}>
               ✓ Submit
             </button>
           </div>
         </div>
 
-        {/* Code Editor */}
-        <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
-          {/* Line Numbers */}
-          <div
-            ref={lineNumberRef}
-            style={{
-              padding: "16px 12px 16px 16px",
-              minWidth: 52,
-              textAlign: "right",
-              userSelect: "none",
-              color: "rgba(148, 163, 184, 0.4)",
-              fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-              fontSize: 13,
-              lineHeight: "1.6",
-              borderRight: "1px solid rgba(255,255,255,0.06)",
-              overflow: "hidden",
-              background: "rgba(0,0,0,0.15)",
-            }}
-          >
-            {Array.from({ length: lineCount }, (_, i) => (
-              <div key={i + 1}>{i + 1}</div>
-            ))}
-          </div>
+        <div style={{ flex: 1, overflow: "hidden", display: activeRightTab === "solution" ? "flex" : "none", flexDirection: "column" }}>
+          <Suspense fallback={<div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "#333", fontSize: 13 }}>Loading editor...</div>}>
+            <MonacoEditor height="100%" language="python" theme="vs-dark" value={code} onChange={val => setCode(val ?? "")} options={{ fontSize: 13.5, fontFamily: "'JetBrains Mono', 'Fira Code', monospace", minimap: { enabled: false }, lineNumbers: "on", lineNumbersMinChars: 3, scrollBeyondLastLine: false, wordWrap: "on", tabSize: 4, insertSpaces: true, automaticLayout: true, padding: { top: 16, bottom: 16 }, glyphMargin: false, overviewRulerBorder: false, scrollbar: { verticalScrollbarSize: 6, horizontalScrollbarSize: 6 } }} />
+          </Suspense>
+        </div>
+        <div style={{ flex: 1, overflow: "hidden", display: activeRightTab === "tests" ? "flex" : "none", flexDirection: "column" }}>
+          <Suspense fallback={null}>
+            <MonacoEditor height="100%" language="python" theme="vs-dark" value={tests} options={{ fontSize: 13.5, fontFamily: "'JetBrains Mono', 'Fira Code', monospace", minimap: { enabled: false }, readOnly: true, lineNumbers: "on", scrollBeyondLastLine: false, wordWrap: "on", automaticLayout: true, padding: { top: 16, bottom: 16 }, glyphMargin: false, overviewRulerBorder: false, scrollbar: { verticalScrollbarSize: 6, horizontalScrollbarSize: 6 } }} />
+          </Suspense>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-          {/* Textarea */}
-          <textarea
-            ref={textareaRef}
-            className="code-editor-textarea"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            onScroll={handleEditorScroll}
-            onKeyDown={handleKeyDown}
-            spellCheck={false}
-            autoCapitalize="off"
-            autoCorrect="off"
-          />
+// ── Individual test case card ──
+function TestCard({ test, index }: { test: TestResult; index: number }) {
+  const [expanded, setExpanded] = useState(test.status === "failed");
+  const passed = test.status === "passed";
+
+  return (
+    <div style={{ marginTop: 10, border: `1px solid ${passed ? "#10b98122" : "#ef444422"}`, borderRadius: 8, overflow: "hidden", background: passed ? "rgba(16,185,129,0.03)" : "rgba(239,68,68,0.03)" }}>
+      {/* Header row */}
+      <button onClick={() => setExpanded(e => !e)} style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: "transparent", border: "none", cursor: "pointer", textAlign: "left" }}>
+        {/* Status icon */}
+        <div style={{ width: 22, height: 22, borderRadius: "50%", background: passed ? "rgba(16,185,129,0.15)" : "rgba(239,68,68,0.15)", border: `1px solid ${passed ? "#10b981" : "#ef4444"}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <span style={{ fontSize: 11, fontWeight: 800, color: passed ? "#10b981" : "#ef4444" }}>{passed ? "✓" : "✗"}</span>
         </div>
 
-        {/* Bottom Output Bar (compact) */}
-        {output && (
-          <div className="output-panel">
-            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
-              <span
-                style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: "50%",
-                  background: status === "passed" ? "var(--accent-green)" : "var(--accent-red)",
-                }}
-              />
-              <span
-                style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: status === "passed" ? "var(--accent-green)" : "var(--accent-red)",
-                }}
-              >
-                {status === "passed" ? "PASSED" : "FAILED"}
-              </span>
+        {/* Test name */}
+        <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: passed ? "#e2e8f0" : "#fca5a5", fontFamily: "var(--font-mono)" }}>
+          {test.name.replace("test_", "").replaceAll("_", " ")}
+        </span>
+
+        {/* Case index */}
+        <span style={{ fontSize: 11, color: "#444", fontWeight: 500 }}>Case {index + 1}</span>
+
+        {/* Time */}
+        <span style={{ fontSize: 11, color: "#555", fontFamily: "var(--font-mono)", minWidth: 50, textAlign: "right" }}>{test.timeMs}ms</span>
+
+        {/* Expand chevron */}
+        <span style={{ fontSize: 10, color: "#444", transform: expanded ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }}>▼</span>
+      </button>
+
+      {/* Expanded detail */}
+      {expanded && (
+        <div style={{ padding: "0 16px 14px", borderTop: `1px solid ${passed ? "#10b98118" : "#ef444418"}` }}>
+          {test.output && (
+            <div style={{ marginTop: 12 }}>
+              <div style={{ fontSize: 10, color: "#555", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 6 }}>Output</div>
+              <pre style={{ background: "#060606", border: "1px solid #1a1a1a", borderRadius: 5, padding: "8px 12px", fontSize: 12, fontFamily: "var(--font-mono)", color: "#ccc", whiteSpace: "pre-wrap", margin: 0, lineHeight: 1.6 }}>{test.output}</pre>
             </div>
-            <pre
-              style={{
-                margin: 0,
-                color: "var(--text-muted)",
-                whiteSpace: "pre-wrap",
-                fontSize: 11,
-                lineHeight: 1.5,
-              }}
-            >
-              {output}
-            </pre>
-          </div>
-        )}
-      </div>
+          )}
+          {test.error && (
+            <div style={{ marginTop: 12 }}>
+              <div style={{ fontSize: 10, color: "#ef4444", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 6 }}>Traceback</div>
+              <pre style={{ background: "rgba(239,68,68,0.04)", border: "1px solid rgba(239,68,68,0.12)", borderRadius: 5, padding: "8px 12px", fontSize: 11.5, fontFamily: "var(--font-mono)", color: "#fca5a5", whiteSpace: "pre-wrap", margin: 0, lineHeight: 1.6 }}>{test.error}</pre>
+            </div>
+          )}
+          {!test.output && !test.error && (
+            <div style={{ marginTop: 10, fontSize: 12, color: "#444" }}>No output captured.</div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
