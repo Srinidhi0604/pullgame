@@ -19,6 +19,7 @@ interface CodingTerminalProps {
   skeleton: string;
   tests: string;
   backHref: string;
+  topicExplanation?: string;
 }
 
 interface TestResult {
@@ -77,9 +78,10 @@ export function CodingTerminal({
   tests,
   backHref,
   taskSlug,
+  topicExplanation,
 }: CodingTerminalProps & { taskSlug?: string }) {
   const [code, setCode] = useState(skeleton);
-  const [activeLeftTab, setActiveLeftTab] = useState<"description" | "output">(
+  const [activeLeftTab, setActiveLeftTab] = useState<"description" | "explanation" | "output">(
     "description",
   );
   const [activeRightTab, setActiveRightTab] = useState<"solution" | "tests">(
@@ -741,10 +743,10 @@ print("__TEST_JSON__:" + _json.dumps(_test_results))
             </span>
           </div>
           <div style={{ display: "flex", gap: 2 }}>
-            {(["description", "output"] as const).map((tab) => (
+            {(["description", ...(topicExplanation ? ["explanation"] : []), "output"] as const).map((tab) => (
               <button
                 key={tab}
-                onClick={() => setActiveLeftTab(tab)}
+                onClick={() => setActiveLeftTab(tab as "description" | "explanation" | "output")}
                 style={{
                   padding: "4px 12px",
                   borderRadius: 5,
@@ -783,14 +785,43 @@ print("__TEST_JSON__:" + _json.dumps(_test_results))
                     }}
                   />
                 )}
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                {tab === "description" && (
+                  <>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                      <polyline points="14 2 14 8 20 8"></polyline>
+                      <line x1="16" y1="13" x2="8" y2="13"></line>
+                      <line x1="16" y1="17" x2="8" y2="17"></line>
+                      <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                    <span>Description</span>
+                  </>
+                )}
+                {tab === "explanation" && (
+                  <>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                      <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                    </svg>
+                    <span>Topic Explanation</span>
+                  </>
+                )}
+                {tab === "output" && (
+                  <>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="4 17 10 11 4 5"></polyline>
+                      <line x1="12" y1="19" x2="20" y2="19"></line>
+                    </svg>
+                    <span>Output</span>
+                  </>
+                )}
               </button>
             ))}
           </div>
         </div>
 
         {activeLeftTab === "description" ? (
-          <div className="description-panel">
+          <div className="description-panel" style={{ flex: 1, overflow: "auto", paddingBottom: 24 }}>
             <h1
               style={{
                 fontSize: 21,
@@ -802,6 +833,20 @@ print("__TEST_JSON__:" + _json.dumps(_test_results))
               {title}
             </h1>
             {renderDescription(description)}
+          </div>
+        ) : activeLeftTab === "explanation" && topicExplanation ? (
+          <div className="description-panel" style={{ flex: 1, overflow: "auto", paddingBottom: 24 }}>
+            <h1
+              style={{
+                fontSize: 21,
+                fontWeight: 800,
+                marginBottom: 4,
+                letterSpacing: "-0.02em",
+              }}
+            >
+              Topic Explanation
+            </h1>
+            {renderDescription(topicExplanation)}
           </div>
         ) : (
           <div

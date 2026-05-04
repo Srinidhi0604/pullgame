@@ -32,6 +32,7 @@ export default async function CodingPage({
       tests={task.tests}
       backHref={`/papers/${paper.slug}`}
       taskSlug={taskSlug}
+      topicExplanation={paper.description}
     />
   );
 }
