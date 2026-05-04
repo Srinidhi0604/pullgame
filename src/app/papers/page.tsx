@@ -5,7 +5,8 @@ type ActiveTrack = PaperTrack | "all";
 
 function parseTrack(track: string | string[] | undefined): ActiveTrack {
   const value = Array.isArray(track) ? track[0] : track;
-  if (value === "ml" || value === "biology" || value === "hardware") return value;
+  if (value === "ml" || value === "biology" || value === "chemistry" || value === "electrical" || value === "electronics") return value;
+  if (value === "hardware") return "electronics";
   return "all";
 }
 

@@ -7,7 +7,7 @@ export const bioChemPapers: Paper[] = [
     year: 2021,
     authors: ["Ramsundar", "DeepChem"],
     tags: ["Biology", "Chemistry", "DeepChem", "MoleculeNet", "GraphConv", "Drug Discovery", "Visualization"],
-    track: "biology",
+    track: "chemistry",
     sourceUrl: "https://deepchem.io/tutorials/the-basic-tools-of-the-deep-life-sciences/",
     repositoryUrl: "https://github.com/deepchem/deepchem",
     visual: {
@@ -359,7 +359,7 @@ def test_molecule_graph_layout():
     year: 2018,
     authors: ["Wu", "Ramsundar", "Feinberg", "et al."],
     tags: ["Biology", "Chemistry", "MoleculeNet", "DeepChem", "Benchmarking", "Drug Discovery"],
-    track: "biology",
+    track: "chemistry",
     sourceUrl: "https://pubs.rsc.org/en/content/articlehtml/2018/sc/c7sc02664a",
     repositoryUrl: "https://github.com/deepchem/deepchem",
     visual: {
@@ -499,7 +499,7 @@ Benchmarks become useful when results are comparable. Implement a small summariz
     year: 2015,
     authors: ["Duvenaud", "Maclaurin", "Aguilera-Iparraguirre", "et al."],
     tags: ["Chemistry", "GraphConv", "Molecular Fingerprints", "Drug Discovery", "Representation Learning"],
-    track: "biology",
+    track: "chemistry",
     sourceUrl: "https://arxiv.org/abs/1509.09292",
     visual: {
       variant: "molecule",
@@ -615,7 +615,7 @@ def test_atom_contribution_scores():
     year: 2017,
     authors: ["Gomes", "Ramsundar", "Feinberg", "Pande"],
     tags: ["Biology", "Chemistry", "Protein Ligand", "3D Structure", "Drug Discovery", "Visualization"],
-    track: "biology",
+    track: "chemistry",
     sourceUrl: "https://arxiv.org/abs/1703.10603",
     visual: {
       variant: "protein",
@@ -736,7 +736,7 @@ def test_binding_contact_map():
     year: 2018,
     authors: ["De Cao", "Kipf"],
     tags: ["Chemistry", "Generative Models", "GAN", "Molecular Graphs", "Drug Discovery", "Visualization"],
-    track: "biology",
+    track: "chemistry",
     sourceUrl: "https://arxiv.org/abs/1805.11973",
     visual: {
       variant: "generative",

@@ -1,10 +1,33 @@
 import { bioChemPapers } from "./bioPapers";
+import { domainPapers } from "./domainPapers";
 
 export type Difficulty = "easy" | "medium" | "hard";
-export type PaperTrack = "ml" | "biology" | "hardware";
+export type PaperTrack = "ml" | "biology" | "chemistry" | "electrical" | "electronics";
 
 export interface PaperVisual {
-  variant: "deepchem" | "benchmark" | "molecule" | "protein" | "generative";
+  variant:
+    | "deepchem"
+    | "benchmark"
+    | "molecule"
+    | "protein"
+    | "generative"
+    | "genomics"
+    | "single-cell"
+    | "cell"
+    | "structure"
+    | "phylogeny"
+    | "chemistry"
+    | "chemistry-3d"
+    | "docking"
+    | "reaction"
+    | "power"
+    | "signals"
+    | "machines"
+    | "logic"
+    | "analog"
+    | "cmos"
+    | "layout"
+    | "memory";
   caption: string;
   tools?: { label: string; href: string }[];
 }
@@ -717,6 +740,7 @@ def test_backprop():
     ],
   },
   ...bioChemPapers,
+  ...domainPapers,
 ];
 
 export const difficultyConfig = {
@@ -749,6 +773,16 @@ export const tagColors: Record<string, string> = {
   "Visualization": "#f59e0b",
   "Generative Models": "#ec4899",
   "Protein Ligand": "#a3e635",
+  "Electrical Learning": "#38bdf8",
+  "Electronics Learning": "#f97316",
+  "Power Systems": "#0ea5e9",
+  "Signals": "#22c55e",
+  "Control": "#eab308",
+  "Digital Logic": "#f43f5e",
+  "CMOS": "#8b5cf6",
+  "Analog": "#06b6d4",
+  "VLSI": "#a855f7",
+  "RISC-V": "#ef4444",
 };
 
 // Helper to find a paper by slug

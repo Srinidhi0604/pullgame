@@ -10,15 +10,24 @@ export default function TracksSection() {
       link: "/papers?track=ml"
     },
     {
-      title: "Hardware",
-      subtitle: "(Electrical/Electronics)",
-      description: "Explore circuit design, embedded systems, and VLSI. Understand the physical layer of computation.",
-      link: "/papers?track=hardware"
+      title: "Biology",
+      description: "Explore genomics, protein structure, cell imaging, single-cell analysis, and bioinformatics through code.",
+      link: "/papers?track=biology"
     },
     {
-      title: "Biology & Chemistry",
-      description: "Implement DeepChem workflows, molecular graphs, bioinformatics, and molecular visualization through code.",
-      link: "/papers?track=biology"
+      title: "Chemistry",
+      description: "Implement DeepChem workflows, molecular graphs, docking, fingerprints, reactions, and molecular generation.",
+      link: "/papers?track=chemistry"
+    },
+    {
+      title: "Electrical Learning",
+      description: "Build power systems, control, machines, filters, and signal-processing implementations from papers.",
+      link: "/papers?track=electrical"
+    },
+    {
+      title: "Electronics Learning",
+      description: "Practice HDLBits-style logic, CMOS, analog circuits, VLSI, memory devices, and processor design.",
+      link: "/papers?track=electronics"
     }
   ];
 
@@ -58,10 +67,7 @@ export default function TracksSection() {
               }}
               >
                 <h3 style={{ fontSize: 24, fontWeight: 600, color: "white", marginBottom: 4 }}>{track.title}</h3>
-                {track.subtitle && (
-                  <div style={{ fontSize: 14, color: "#9ca3af", marginBottom: 16, fontWeight: 500 }}>{track.subtitle}</div>
-                )}
-                <p style={{ color: "#9ca3af", fontSize: 15, lineHeight: 1.6, flex: 1, marginTop: track.subtitle ? 0 : 16 }}>
+                <p style={{ color: "#9ca3af", fontSize: 15, lineHeight: 1.6, flex: 1, marginTop: 16 }}>
                   {track.description}
                 </p>
                 <div style={{ marginTop: 32, display: "flex", alignItems: "center", color: "white", fontSize: 14, fontWeight: 500 }}>
