@@ -40,22 +40,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    // Simulate API delay
-    await new Promise((r) => setTimeout(r, 1000));
-    if (!email || !password) return false;
-    const u: AuthUser = { username: email.split("@")[0], email };
-    setUser(u);
-    localStorage.setItem("pullgame_user", JSON.stringify(u));
-    return true;
+    try {
+      const response = await fetch("/api/auth/signin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) return false;
+
+      const data = await response.json();
+      setUser(data.user);
+      localStorage.setItem("pullgame_user", JSON.stringify(data.user));
+      localStorage.setItem("pullgame_token", data.token);
+      return true;
+    } catch (error) {
+      console.error("Login error:", error);
+      return false;
+    }
   };
 
   const signup = async (username: string, email: string, password: string): Promise<boolean> => {
-    await new Promise((r) => setTimeout(r, 1000));
-    if (!username || !email || !password || password.length < 8) return false;
-    const u: AuthUser = { username, email };
-    setUser(u);
-    localStorage.setItem("pullgame_user", JSON.stringify(u));
-    return true;
+    try {
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, email, password }),
+      });
+
+      if (!response.ok) return false;
+
+      const data = await response.json();
+      // After signup, we automatically log them in
+      return login(email, password);
+    } catch (error) {
+      console.error("Signup error:", error);
+      return false;
+    }
   };
 
   const logout = () => {

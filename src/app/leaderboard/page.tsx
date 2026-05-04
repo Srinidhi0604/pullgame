@@ -1,18 +1,43 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
-import { mockUsers, currentUser } from "@/data/users";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/components/AuthProvider";
 
 type FilterType = "all" | "week" | "month";
 
+interface LeaderboardUser {
+  _id: string;
+  username: string;
+  score: number;
+  problemsSolved: number;
+}
+
 export default function LeaderboardPage() {
   const [filter, setFilter] = useState<FilterType>("all");
+  const [users, setUsers] = useState<LeaderboardUser[]>([]);
+  const { user: currentUser } = useAuth();
 
-  const sortedUsers = [...mockUsers].sort((a, b) => b.score - a.score);
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await fetch("/api/users");
+        const data = await res.json();
+        if (data.success) {
+          setUsers(data.users);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchUsers();
+  }, []);
+
+  const sortedUsers = [...users].sort((a, b) => b.score - a.score);
 
   return (
-    <div style={{ maxWidth: 1000, margin: "0 auto", padding: "40px 24px 80px" }}>
+    <div
+      style={{ maxWidth: 1000, margin: "0 auto", padding: "40px 24px 80px" }}
+    >
       {/* Header */}
       <div className="animate-fade-in" style={{ marginBottom: 40 }}>
         <h1
@@ -23,43 +48,56 @@ export default function LeaderboardPage() {
             marginBottom: 12,
           }}
         >
-          Leader<span style={{ color: "white" }}>board</span>
+          Leaderboard
         </h1>
         <p style={{ fontSize: 15, color: "var(--text-secondary)" }}>
-          Top implementers ranked by score. Score = Σ(difficulty_weight × problems_solved)
+          Top implementers ranked by score. Score = Σ(difficulty_weight ×
+          problems_solved)
         </p>
       </div>
 
       {/* Filter Tabs */}
-      <div style={{ display: "flex", gap: 8, marginBottom: 32 }}>
+      <div style={{ display: "flex", gap: 6, marginBottom: 32 }}>
         {(
           [
             { key: "all", label: "All Time" },
             { key: "week", label: "This Week" },
             { key: "month", label: "This Month" },
           ] as const
-        ).map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setFilter(tab.key)}
-            className={filter === tab.key ? "tab-active" : "tab-inactive"}
-            style={{
-              padding: "8px 20px",
-              borderRadius: 20,
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: "pointer",
-              border: filter === tab.key ? "none" : undefined,
-              transition: "all 0.2s ease",
-            }}
-          >
-            {tab.label}
-          </button>
-        ))}
+        ).map((tab) => {
+          const isActive = filter === tab.key;
+          return (
+            <button
+              key={tab.key}
+              onClick={() => setFilter(tab.key)}
+              style={{
+                padding: "7px 18px",
+                borderRadius: 20,
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+                background: isActive ? "#fff" : "transparent",
+                color: isActive ? "#000" : "var(--text-muted)",
+                border: isActive ? "1px solid #fff" : "1px solid #333",
+              }}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Table */}
-      <div className="animate-slide-up" style={{ overflow: "hidden", background: "#050505", border: "1px solid #222", borderRadius: 16 }}>
+      <div
+        className="animate-slide-up"
+        style={{
+          overflow: "hidden",
+          background: "#050505",
+          border: "1px solid #222",
+          borderRadius: 16,
+        }}
+      >
         {/* Table Header */}
         <div
           style={{
@@ -81,145 +119,131 @@ export default function LeaderboardPage() {
           <span style={{ textAlign: "right" }}>Score</span>
         </div>
 
-        {/* Rows */}
+        {/* Rows — plain divs, no navigation on click */}
         {sortedUsers.map((user, index) => {
           const rank = index + 1;
-          const isCurrentUser = user.id === currentUser.id;
+          const isCurrentUser =
+            currentUser && user.username === currentUser.username;
 
           return (
-            <Link
-              key={user.id}
-              href={`/profile/${user.username}`}
-              style={{ textDecoration: "none", color: "inherit" }}
+            <div
+              key={user._id}
+              className={isCurrentUser ? "highlight-row" : ""}
+              style={{
+                display: "grid",
+                gridTemplateColumns: "60px 1fr 140px 100px 100px",
+                padding: "16px 24px",
+                alignItems: "center",
+                borderBottom: "1px solid rgba(255,255,255,0.04)",
+                transition: "background 0.2s ease",
+              }}
+              onMouseEnter={(e) => {
+                if (!isCurrentUser) {
+                  (e.currentTarget as HTMLDivElement).style.background =
+                    "rgba(255,255,255,0.02)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isCurrentUser) {
+                  (e.currentTarget as HTMLDivElement).style.background = "";
+                }
+              }}
             >
-              <div
-                className={isCurrentUser ? "highlight-row" : ""}
+              <span
                 style={{
-                  display: "grid",
-                  gridTemplateColumns: "60px 1fr 140px 100px 100px",
-                  padding: "16px 24px",
-                  alignItems: "center",
-                  borderBottom: "1px solid rgba(255,255,255,0.04)",
-                  transition: "background 0.2s ease",
-                  cursor: "pointer",
-                }}
-                onMouseEnter={(e) => {
-                  if (!isCurrentUser) {
-                    (e.currentTarget as HTMLDivElement).style.background =
-                      "rgba(255,255,255,0.03)";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isCurrentUser) {
-                    (e.currentTarget as HTMLDivElement).style.background = "";
-                  }
+                  fontWeight: 800,
+                  fontSize: 16,
+                  color:
+                    rank === 1
+                      ? "#f59e0b"
+                      : rank === 2
+                        ? "#94a3b8"
+                        : rank === 3
+                          ? "#cd7f32"
+                          : "white",
                 }}
               >
-                <span
+                {`#${rank}`}
+              </span>
+
+              {/* User */}
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div
                   style={{
-                    fontWeight: 800,
-                    fontSize: 16,
-                    color: "white"
+                    width: 36,
+                    height: 36,
+                    borderRadius: "50%",
+                    background: "#111",
+                    border: "1px solid #333",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 14,
+                    fontWeight: 700,
+                    color: "white",
+                    flexShrink: 0,
                   }}
                 >
-                  {`#${rank}`}
-                </span>
-
-                {/* User */}
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <div
-                    style={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: "50%",
-                      background: "#111",
-                      border: "1px solid #333",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 14,
-                      fontWeight: 700,
-                      color: "white",
-                      flexShrink: 0,
-                    }}
-                  >
-                    {user.username[0].toUpperCase()}
-                  </div>
-                  <div>
-                    <div style={{ fontWeight: 600, fontSize: 14 }}>
-                      {user.username}
-                      {isCurrentUser && (
-                        <span
-                          style={{
-                            fontSize: 10,
-                            marginLeft: 8,
-                            padding: "2px 8px",
-                            borderRadius: 10,
-                            background: "#222",
-                            color: "white",
-                            fontWeight: 600,
-                          }}
-                        >
-                          YOU
-                        </span>
-                      )}
-                    </div>
-                    {user.plan === "pro" && (
+                  {user.username[0].toUpperCase()}
+                </div>
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: 14 }}>
+                    {user.username}
+                    {isCurrentUser && (
                       <span
                         style={{
                           fontSize: 10,
-                          color: "#9ca3af",
+                          marginLeft: 8,
+                          padding: "2px 8px",
+                          borderRadius: 10,
+                          background: "#222",
+                          color: "white",
                           fontWeight: 600,
-                          border: "1px solid #333",
-                          padding: "2px 6px",
-                          borderRadius: 4
                         }}
                       >
-                        PRO
+                        YOU
                       </span>
                     )}
                   </div>
                 </div>
-
-                {/* Problems Solved */}
-                <span
-                  style={{
-                    textAlign: "center",
-                    fontWeight: 600,
-                    fontSize: 14,
-                    color: "var(--text-primary)",
-                  }}
-                >
-                  {user.problemsSolved}
-                </span>
-
-                {/* Streak */}
-                <span
-                  style={{
-                    textAlign: "center",
-                    fontWeight: 600,
-                    fontSize: 14,
-                    color: "white",
-                  }}
-                >
-                  {user.currentStreak > 0
-                    ? `${user.currentStreak}d`
-                    : "—"}
-                </span>
-
-                {/* Score */}
-                <span
-                  style={{
-                    textAlign: "right",
-                    fontWeight: 800,
-                    fontSize: 16,
-                    color: "white"
-                  }}
-                >
-                  {user.score}
-                </span>
               </div>
-            </Link>
+
+              {/* Problems Solved */}
+              <span
+                style={{
+                  textAlign: "center",
+                  fontWeight: 600,
+                  fontSize: 14,
+                  color: "var(--text-primary)",
+                }}
+              >
+                {user.problemsSolved}
+              </span>
+
+              {/* Streak */}
+              <span
+                style={{
+                  textAlign: "center",
+                  fontWeight: 600,
+                  fontSize: 14,
+                  color: "white",
+                }}
+              >
+                0
+              </span>
+
+              {/* Score */}
+              <span
+                style={{
+                  textAlign: "right",
+                  fontWeight: 800,
+                  fontSize: 16,
+                  color: "white",
+                }}
+              >
+                {user.score}
+              </span>
+            </div>
           );
         })}
       </div>
@@ -237,27 +261,30 @@ export default function LeaderboardPage() {
           color: "var(--text-muted)",
           border: "1px solid #222",
           borderRadius: 16,
-          background: "#050505"
+          background: "#050505",
         }}
       >
-        <span>
-          <span style={{ padding: "2px 8px", borderRadius: 10, fontSize: 11, marginRight: 6, border: "1px solid #333", color: "white" }}>
-            Easy
+        {[
+          { label: "Easy", pts: "×1 point" },
+          { label: "Medium", pts: "×2 points" },
+          { label: "Hard", pts: "×3 points" },
+        ].map(({ label, pts }) => (
+          <span key={label}>
+            <span
+              style={{
+                padding: "2px 8px",
+                borderRadius: 10,
+                fontSize: 11,
+                marginRight: 6,
+                border: "1px solid #333",
+                color: "white",
+              }}
+            >
+              {label}
+            </span>
+            {pts}
           </span>
-          ×1 point
-        </span>
-        <span>
-          <span style={{ padding: "2px 8px", borderRadius: 10, fontSize: 11, marginRight: 6, border: "1px solid #333", color: "white" }}>
-            Medium
-          </span>
-          ×2 points
-        </span>
-        <span>
-          <span style={{ padding: "2px 8px", borderRadius: 10, fontSize: 11, marginRight: 6, border: "1px solid #333", color: "white" }}>
-            Hard
-          </span>
-          ×3 points
-        </span>
+        ))}
       </div>
     </div>
   );

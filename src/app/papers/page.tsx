@@ -3,11 +3,21 @@
 import Link from "next/link";
 import { useState } from "react";
 import { papers } from "@/data/papers";
+import { useAuth } from "@/components/AuthProvider";
 
 // Define consistent colors for tags based on their string values
 const tagColors = [
-  "#ef4444", "#f97316", "#f59e0b", "#84cc16", "#10b981", 
-  "#06b6d4", "#3b82f6", "#6366f1", "#8b5cf6", "#d946ef", "#f43f5e"
+  "#ef4444",
+  "#f97316",
+  "#f59e0b",
+  "#84cc16",
+  "#10b981",
+  "#06b6d4",
+  "#3b82f6",
+  "#6366f1",
+  "#8b5cf6",
+  "#d946ef",
+  "#f43f5e",
 ];
 
 const getTagColor = (tag: string) => {
@@ -21,7 +31,12 @@ const getTagColor = (tag: string) => {
 // Extract a short summary from the markdown description
 function getSummary(description: string) {
   const lines = description.split("\n");
-  const bgIndex = lines.findIndex((l) => l.includes("## Background") || l.includes("## The Math") || l.includes("## The Mechanism"));
+  const bgIndex = lines.findIndex(
+    (l) =>
+      l.includes("## Background") ||
+      l.includes("## The Math") ||
+      l.includes("## The Mechanism"),
+  );
   if (bgIndex !== -1) {
     // Find the first non-empty line after the heading
     for (let i = bgIndex + 1; i < lines.length; i++) {
@@ -43,24 +58,93 @@ export default function PapersPage() {
   const allTags = Array.from(new Set(papers.flatMap((p) => p.tags))).sort();
 
   const filteredPapers = papers.filter((p) => {
-    const matchesSearch = p.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          p.authors.some(a => a.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                          p.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesSearch =
+      p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.authors.some((a) =>
+        a.toLowerCase().includes(searchQuery.toLowerCase()),
+      ) ||
+      p.tags.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesTag = activeTag ? p.tags.includes(activeTag) : true;
     return matchesSearch && matchesTag;
   });
 
+  const { user } = useAuth();
+
+  if (!user) {
+    return (
+      <div
+        style={{
+          maxWidth: 1200,
+          margin: "0 auto",
+          padding: "100px 24px",
+          textAlign: "center",
+        }}
+        className="animate-fade-in"
+      >
+        <h1 style={{ fontSize: 32, fontWeight: 700, marginBottom: 16 }}>
+          Sign In to Access Papers
+        </h1>
+        <p
+          style={{
+            color: "var(--text-secondary)",
+            fontSize: 16,
+            marginBottom: 32,
+          }}
+        >
+          You need an account to view and solve paper implementations.
+        </p>
+        <Link
+          href="/auth/login"
+          className="btn-primary"
+          style={{
+            textDecoration: "none",
+            display: "inline-block",
+            padding: "12px 24px",
+            borderRadius: 8,
+            fontWeight: 600,
+          }}
+        >
+          Log In
+        </Link>
+      </div>
+    );
+  }
+
   return (
-    <div style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 24px 100px" }} className="animate-fade-in">
+    <div
+      style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 24px 100px" }}
+      className="animate-fade-in"
+    >
       <div style={{ marginBottom: 40 }}>
-        <h1 style={{ fontSize: 32, fontWeight: 700, marginBottom: 8 }}>Papers</h1>
-        <p style={{ color: "var(--text-secondary)", fontSize: 16 }}>Select a paper to start implementing.</p>
+        <h1 style={{ fontSize: 32, fontWeight: 700, marginBottom: 8 }}>
+          Papers
+        </h1>
+        <p style={{ color: "var(--text-secondary)", fontSize: 16 }}>
+          Select a paper to start implementing.
+        </p>
       </div>
 
       {/* Search Bar */}
       <div style={{ position: "relative", marginBottom: 24 }}>
-        <div style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <div
+          style={{
+            position: "absolute",
+            left: 16,
+            top: "50%",
+            transform: "translateY(-50%)",
+            color: "var(--text-muted)",
+          }}
+        >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <circle cx="11" cy="11" r="8"></circle>
             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
           </svg>
@@ -79,16 +163,30 @@ export default function PapersPage() {
             color: "var(--text-primary)",
             fontSize: 15,
             outline: "none",
-            transition: "border-color 0.2s"
+            transition: "border-color 0.2s",
           }}
-          onFocus={(e) => e.target.style.borderColor = "rgba(255,255,255,0.2)"}
-          onBlur={(e) => e.target.style.borderColor = "rgba(255,255,255,0.08)"}
+          onFocus={(e) =>
+            (e.target.style.borderColor = "rgba(255,255,255,0.2)")
+          }
+          onBlur={(e) =>
+            (e.target.style.borderColor = "rgba(255,255,255,0.08)")
+          }
         />
       </div>
 
       {/* Tags Filter */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 40 }}>
-        <span style={{ color: "var(--text-muted)", fontSize: 14 }}>Filter by:</span>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          flexWrap: "wrap",
+          marginBottom: 40,
+        }}
+      >
+        <span style={{ color: "var(--text-muted)", fontSize: 14 }}>
+          Filter by:
+        </span>
         <button
           onClick={() => setActiveTag(null)}
           style={{
@@ -97,53 +195,69 @@ export default function PapersPage() {
             fontSize: 12,
             fontWeight: 500,
             cursor: "pointer",
-            background: activeTag === null ? "rgba(255,255,255,0.1)" : "transparent",
-            color: activeTag === null ? "var(--text-primary)" : "var(--text-secondary)",
+            background:
+              activeTag === null ? "rgba(255,255,255,0.1)" : "transparent",
+            color:
+              activeTag === null
+                ? "var(--text-primary)"
+                : "var(--text-secondary)",
             border: "none",
-            transition: "all 0.2s"
+            transition: "all 0.2s",
           }}
         >
           All
         </button>
-        {allTags.map(tag => {
+        {allTags.map((tag) => {
           const color = getTagColor(tag);
           return (
-          <button
-            key={tag}
-            onClick={() => setActiveTag(tag === activeTag ? null : tag)}
-            style={{
-              padding: "4px 12px",
-              borderRadius: 16,
-              fontSize: 12,
-              fontWeight: 500,
-              cursor: "pointer",
-              background: activeTag === tag ? `${color}30` : "transparent",
-              color: activeTag === tag ? color : "var(--text-secondary)",
-              border: `1px solid ${activeTag === tag ? color : "transparent"}`,
-              transition: "all 0.2s"
-            }}
-            onMouseEnter={(e) => {
-              if (activeTag !== tag) {
-                e.currentTarget.style.color = color;
-                e.currentTarget.style.background = `${color}15`;
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (activeTag !== tag) {
-                e.currentTarget.style.color = "var(--text-secondary)";
-                e.currentTarget.style.background = "transparent";
-              }
-            }}
-          >
-            {tag}
-          </button>
-        )})}
+            <button
+              key={tag}
+              onClick={() => setActiveTag(tag === activeTag ? null : tag)}
+              style={{
+                padding: "4px 12px",
+                borderRadius: 16,
+                fontSize: 12,
+                fontWeight: 500,
+                cursor: "pointer",
+                background: activeTag === tag ? `${color}30` : "transparent",
+                color: activeTag === tag ? color : "var(--text-secondary)",
+                border: `1px solid ${activeTag === tag ? color : "transparent"}`,
+                transition: "all 0.2s",
+              }}
+              onMouseEnter={(e) => {
+                if (activeTag !== tag) {
+                  e.currentTarget.style.color = color;
+                  e.currentTarget.style.background = `${color}15`;
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (activeTag !== tag) {
+                  e.currentTarget.style.color = "var(--text-secondary)";
+                  e.currentTarget.style.background = "transparent";
+                }
+              }}
+            >
+              {tag}
+            </button>
+          );
+        })}
       </div>
 
       {/* Papers Grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))", gap: 24 }} className="stagger-children">
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))",
+          gap: 24,
+        }}
+        className="stagger-children"
+      >
         {filteredPapers.map((paper) => (
-          <Link href={`/papers/${paper.slug}`} key={paper.slug} style={{ textDecoration: "none" }}>
+          <Link
+            href={`/papers/${paper.slug}`}
+            key={paper.slug}
+            style={{ textDecoration: "none" }}
+          >
             <div
               style={{
                 background: "rgba(0,0,0,0.4)",
@@ -165,28 +279,57 @@ export default function PapersPage() {
               }}
             >
               {/* Card Header Tags */}
-              <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
-                <span className="year-badge" style={{ padding: "2px 8px", borderRadius: 12, background: "rgba(255,255,255,0.1)", fontSize: 11, fontWeight: 600 }}>{paper.year}</span>
-                {paper.tags.map(tag => {
+              <div
+                style={{
+                  display: "flex",
+                  gap: 8,
+                  marginBottom: 16,
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                }}
+              >
+                <span
+                  className="year-badge"
+                  style={{
+                    padding: "2px 8px",
+                    borderRadius: 12,
+                    background: "rgba(255,255,255,0.1)",
+                    fontSize: 11,
+                    fontWeight: 600,
+                  }}
+                >
+                  {paper.year}
+                </span>
+                {paper.tags.map((tag) => {
                   const color = getTagColor(tag);
                   return (
-                  <span
-                    key={tag}
-                    style={{
-                      fontSize: 11,
-                      fontWeight: 600,
-                      padding: "2px 8px",
-                      borderRadius: 12,
-                      background: `${color}15`,
-                      color: color,
-                      border: `1px solid ${color}30`
-                    }}
-                  >
-                    {tag}
-                  </span>
-                )})}
+                    <span
+                      key={tag}
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 600,
+                        padding: "2px 8px",
+                        borderRadius: 12,
+                        background: `${color}15`,
+                        color: color,
+                        border: `1px solid ${color}30`,
+                      }}
+                    >
+                      {tag}
+                    </span>
+                  );
+                })}
                 <div style={{ marginLeft: "auto", color: "var(--text-muted)" }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                     <polyline points="14 2 14 8 20 8"></polyline>
                     <line x1="16" y1="13" x2="8" y2="13"></line>
@@ -196,24 +339,61 @@ export default function PapersPage() {
                 </div>
               </div>
 
-              <h3 style={{ fontSize: 20, fontWeight: 600, color: "var(--text-primary)", marginBottom: 8, lineHeight: 1.3 }}>
+              <h3
+                style={{
+                  fontSize: 20,
+                  fontWeight: 600,
+                  color: "var(--text-primary)",
+                  marginBottom: 8,
+                  lineHeight: 1.3,
+                }}
+              >
                 {paper.title}
               </h3>
-              
-              <p style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 20 }}>
+
+              <p
+                style={{
+                  fontSize: 13,
+                  color: "var(--text-muted)",
+                  marginBottom: 20,
+                }}
+              >
                 {paper.authors.join(", ")}
               </p>
 
-              <p style={{ fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.5, marginTop: "auto", marginBottom: 16 }}>
+              <p
+                style={{
+                  fontSize: 14,
+                  color: "var(--text-secondary)",
+                  lineHeight: 1.5,
+                  marginTop: "auto",
+                  marginBottom: 16,
+                }}
+              >
                 {getSummary(paper.description)}
               </p>
 
               {/* Bottom: task count */}
-              <div style={{ paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.06)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div
+                style={{
+                  paddingTop: 12,
+                  borderTop: "1px solid rgba(255,255,255,0.06)",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
                 <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
-                  {paper.tasks.length} {paper.tasks.length === 1 ? "task" : "tasks"}
+                  {paper.tasks.length}{" "}
+                  {paper.tasks.length === 1 ? "task" : "tasks"}
                 </span>
-                <span style={{ fontSize: 12, color: "var(--accent-cyan)", fontWeight: 600 }}>
+                <span
+                  style={{
+                    fontSize: 12,
+                    color: "var(--accent-cyan)",
+                    fontWeight: 600,
+                  }}
+                >
                   Implement →
                 </span>
               </div>
@@ -221,9 +401,15 @@ export default function PapersPage() {
           </Link>
         ))}
       </div>
-      
+
       {filteredPapers.length === 0 && (
-        <div style={{ textAlign: "center", padding: "60px 0", color: "var(--text-muted)" }}>
+        <div
+          style={{
+            textAlign: "center",
+            padding: "60px 0",
+            color: "var(--text-muted)",
+          }}
+        >
           <p>No papers found matching your criteria.</p>
         </div>
       )}
