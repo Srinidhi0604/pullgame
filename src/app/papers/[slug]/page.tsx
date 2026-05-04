@@ -54,6 +54,23 @@ export default async function PaperDetailPage({ params }: { params: Promise<{ sl
           </h1>
 
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+            <Link
+              href={`/papers/${paper.slug}/reader`}
+              className="btn-primary"
+              style={{
+                padding: "8px 18px",
+                fontSize: 13,
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                whiteSpace: "nowrap",
+                flexShrink: 0,
+                textDecoration: "none",
+                borderRadius: 8,
+              }}
+            >
+              Open Reader
+            </Link>
             {paper.sourceUrl && (
               <a
                 href={paper.sourceUrl}
