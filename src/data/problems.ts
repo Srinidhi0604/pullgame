@@ -9,6 +9,7 @@ export interface Problem {
   skeleton: string;
   tests: string;
   solveCount: number;
+  tags: string[];
 }
 
 export const problems: Problem[] = [
@@ -18,6 +19,7 @@ export const problems: Problem[] = [
     paper: "Attention Is All You Need (Vaswani et al., 2017)",
     difficulty: "medium",
     solveCount: 342,
+    tags: ["2017", "NLP", "Transformer", "Attention"],
     description: `# Scaled Dot-Product Attention
 
 ## Background
@@ -84,6 +86,7 @@ def test_scaled_dot_product_attention():
     paper: "Layer Normalization (Ba, Kiros & Hinton, 2016)",
     difficulty: "easy",
     solveCount: 521,
+    tags: ["2016", "Optimization", "Deep Learning"],
     description: `# Layer Normalization
 
 ## Background
@@ -142,6 +145,7 @@ def test_layer_norm():
     paper: "Attention Is All You Need (Vaswani et al., 2017)",
     difficulty: "easy",
     solveCount: 487,
+    tags: ["2017", "NLP", "Transformer", "Embeddings"],
     description: `# Sinusoidal Positional Encoding
 
 ## Background
@@ -192,6 +196,7 @@ def test_positional_encoding():
     paper: "Attention Is All You Need (Vaswani et al., 2017)",
     difficulty: "hard",
     solveCount: 156,
+    tags: ["2017", "NLP", "Transformer", "Attention"],
     description: `# Multi-Head Attention
 
 ## Background
@@ -252,6 +257,7 @@ def test_multi_head_attention():
     paper: "Batch Normalization: Accelerating Deep Network Training (Ioffe & Szegedy, 2015)",
     difficulty: "medium",
     solveCount: 398,
+    tags: ["2015", "Optimization", "Deep Learning"],
     description: `# Batch Normalization
 
 ## Background
@@ -310,6 +316,7 @@ def test_batch_norm():
     paper: "Adam: A Method for Stochastic Optimization (Kingma & Ba, 2015)",
     difficulty: "medium",
     solveCount: 275,
+    tags: ["2014", "Optimization", "Deep Learning", "Adam"],
     description: `# Adam Optimizer
 
 ## Background
@@ -372,6 +379,7 @@ def test_adam():
     paper: "Dropout: A Simple Way to Prevent Neural Networks from Overfitting (Srivastava et al., 2014)",
     difficulty: "easy",
     solveCount: 612,
+    tags: ["2014", "Deep Learning", "Regularization"],
     description: `# Dropout
 
 ## Background
@@ -424,6 +432,7 @@ def test_dropout():
     paper: "Foundational — Information Theory (Shannon, 1948)",
     difficulty: "easy",
     solveCount: 589,
+    tags: ["1948", "Information Theory", "Foundational"],
     description: `# Cross Entropy Loss
 
 ## Background
@@ -476,6 +485,7 @@ def test_cross_entropy():
     paper: "Attention Is All You Need (Vaswani et al., 2017)",
     difficulty: "hard",
     solveCount: 98,
+    tags: ["2017", "NLP", "Transformer"],
     description: `# Transformer Encoder Block
 
 ## Background
@@ -534,6 +544,7 @@ def test_transformer_encoder():
     paper: "Foundational — Learning representations by back-propagating errors (Rumelhart et al., 1986)",
     difficulty: "medium",
     solveCount: 231,
+    tags: ["1986", "Deep Learning", "Foundational"],
     description: `# Backpropagation Through MLP
 
 ## Background

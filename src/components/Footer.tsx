@@ -40,7 +40,7 @@ export function Footer() {
             P
           </div>
           <span style={{ fontWeight: 600, fontSize: 15, color: "var(--text-secondary)" }}>
-            PullGame
+            openPAPER
           </span>
         </div>
 
@@ -67,7 +67,7 @@ export function Footer() {
         </div>
 
         <p style={{ color: "var(--text-muted)", fontSize: 12 }}>
-          © 2025 PullGame. Implement papers, not just read them.
+          © 2025 openPAPER. Implement papers, not just read them.
         </p>
       </div>
     </footer>

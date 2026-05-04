@@ -6,10 +6,13 @@ import { useState } from "react";
 import { useAuth } from "./AuthProvider";
 
 const navLinks = [
-  { href: "/", label: "Problems" },
+  { href: "/papers", label: "Papers" },
+  { href: "/fundamentals", label: "Fundamentals" },
+  { href: "/advanced-tracks", label: "Advanced Tracks" },
+  { href: "/job-search", label: "Job Search" },
+  { href: "/tests", label: "Tests" },
   { href: "/leaderboard", label: "Leaderboard" },
-  { href: "/reviews", label: "Reviews" },
-  { href: "/about", label: "About" },
+  { href: "/pricing", label: "Pricing" },
 ];
 
 export function Navbar() {
@@ -25,10 +28,10 @@ export function Navbar() {
         position: "sticky",
         top: 0,
         zIndex: 50,
-        background: "rgba(10, 14, 26, 0.8)",
+        background: "rgba(0, 0, 0, 0.8)",
         backdropFilter: "blur(20px)",
         WebkitBackdropFilter: "blur(20px)",
-        borderBottom: "1px solid rgba(255,255,255,0.06)",
+        borderBottom: "1px solid rgba(255,255,255,0.05)",
       }}
     >
       <nav
@@ -48,29 +51,16 @@ export function Navbar() {
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 10,
+            gap: 8,
             textDecoration: "none",
             color: "var(--text-primary)",
           }}
         >
-          <div
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              background: "var(--gradient-brand)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontWeight: 800,
-              fontSize: 16,
-              color: "white",
-            }}
-          >
-            P
-          </div>
-          <span style={{ fontWeight: 700, fontSize: 18, letterSpacing: "-0.02em" }}>
-            Pull<span style={{ color: "var(--accent-cyan)" }}>Game</span>
+          <span style={{ fontWeight: 600, fontSize: 20, color: "var(--text-muted)", letterSpacing: "-0.05em" }}>
+            &gt;_
+          </span>
+          <span style={{ fontWeight: 700, fontSize: 20, letterSpacing: "-0.02em" }}>
+            openPAPER
           </span>
         </Link>
 
@@ -116,36 +106,35 @@ export function Navbar() {
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: 8,
-                  background: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  borderRadius: 10,
-                  padding: "6px 14px",
+                  background: "none",
+                  border: "none",
                   cursor: "pointer",
-                  color: "var(--text-primary)",
-                  fontSize: 13,
-                  fontWeight: 600,
-                  transition: "all 0.2s ease",
+                  padding: 0,
+                  transition: "transform 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.transform = "scale(1.05)";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.transform = "scale(1)";
                 }}
               >
                 <div
                   style={{
-                    width: 26,
-                    height: 26,
+                    width: 36,
+                    height: 36,
                     borderRadius: "50%",
-                    background: "var(--gradient-brand)",
+                    background: "#f97316",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: 12,
-                    fontWeight: 700,
+                    fontSize: 16,
+                    fontWeight: 600,
                     color: "white",
                   }}
                 >
                   {user.username[0].toUpperCase()}
                 </div>
-                {user.username}
-                <span style={{ fontSize: 10, opacity: 0.6 }}>▼</span>
               </button>
 
               {dropdownOpen && (
