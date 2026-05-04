@@ -1,8 +1,28 @@
+"use client";
+
 import Link from "next/link";
+import { useState, useMemo } from "react";
+import { papers, tagColors, getAllTags } from "@/data/papers";
 import ResearchSection from "@/components/ResearchSection";
 import TracksSection from "@/components/TracksSection";
 
 export default function HomePage() {
+  const [search, setSearch] = useState("");
+  const [activeTag, setActiveTag] = useState<string | null>(null);
+  const allTags = useMemo(() => getAllTags(), []);
+
+  const filtered = useMemo(() => {
+    return papers.filter((p) => {
+      const matchSearch =
+        !search ||
+        p.title.toLowerCase().includes(search.toLowerCase()) ||
+        p.tags.some((t) => t.toLowerCase().includes(search.toLowerCase())) ||
+        p.authors.some((a) => a.toLowerCase().includes(search.toLowerCase()));
+      const matchTag = !activeTag || p.tags.includes(activeTag);
+      return matchSearch && matchTag;
+    });
+  }, [search, activeTag]);
+
   return (
     <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px" }}>
       {/* Hero Section */}
@@ -54,13 +74,9 @@ export default function HomePage() {
           </p>
 
           <div>
-            <Link href="/papers" className="btn-primary" style={{ display: "inline-block", textDecoration: "none", padding: "14px 32px", fontSize: 16 }}>
+            <Link href="#papers" className="btn-primary" style={{ display: "inline-block", textDecoration: "none", padding: "14px 32px", fontSize: 16 }}>
               Start Implementing
             </Link>
-          </div>
-
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 24, color: "var(--text-muted)", fontSize: 14 }}>
-
           </div>
         </div>
 
@@ -148,10 +164,202 @@ export default function HomePage() {
         </div>
       </section>
 
-
       <ResearchSection />
-
       <TracksSection />
+
+      {/* Papers Listing Section */}
+      <section id="papers" style={{ padding: "80px 0 24px" }}>
+        <h2
+          style={{
+            fontSize: 32,
+            fontWeight: 800,
+            letterSpacing: "-0.02em",
+            marginBottom: 8,
+          }}
+        >
+          Papers
+        </h2>
+        <p style={{ fontSize: 15, color: "var(--text-secondary)", marginBottom: 32 }}>
+          Select a paper to start implementing.
+        </p>
+
+        {/* Search */}
+        <div style={{ marginBottom: 24, position: "relative" }}>
+          <span
+            style={{
+              position: "absolute",
+              left: 16,
+              top: "50%",
+              transform: "translateY(-50%)",
+              color: "var(--text-muted)",
+              fontSize: 16,
+              pointerEvents: "none",
+            }}
+          >
+            🔍
+          </span>
+          <input
+            className="search-bar"
+            type="text"
+            placeholder="Search papers, tags..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+
+        {/* Filter Tags */}
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 8,
+            marginBottom: 32,
+            paddingBottom: 24,
+            borderBottom: "1px solid rgba(255,255,255,0.06)",
+          }}
+        >
+          {allTags.map((tag) => (
+            <button
+              key={tag}
+              className={`filter-chip ${activeTag === tag ? "filter-chip-active" : ""}`}
+              onClick={() => setActiveTag(activeTag === tag ? null : tag)}
+            >
+              {tag}
+            </button>
+          ))}
+        </div>
+
+        {/* Papers Grid */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))",
+            gap: 20,
+          }}
+          className="stagger-children"
+        >
+          {filtered.map((paper) => (
+            <Link
+              key={paper.slug}
+              href={`/papers/${paper.slug}`}
+              style={{ textDecoration: "none", color: "inherit" }}
+            >
+              <div className="paper-card" style={{ height: "100%" }}>
+                {/* Top row: year + tags + copy icon */}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    marginBottom: 16,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <span className="year-badge">{paper.year}</span>
+                  {paper.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="tag-pill"
+                      style={{
+                        background: `${tagColors[tag] || "#64748b"}22`,
+                        color: tagColors[tag] || "#94a3b8",
+                      }}
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                  <span
+                    style={{
+                      marginLeft: "auto",
+                      color: "var(--text-muted)",
+                      fontSize: 14,
+                      opacity: 0.5,
+                    }}
+                  >
+                    📋
+                  </span>
+                </div>
+
+                {/* Title */}
+                <h3
+                  style={{
+                    fontSize: 17,
+                    fontWeight: 700,
+                    marginBottom: 6,
+                    lineHeight: 1.3,
+                  }}
+                >
+                  {paper.title}
+                </h3>
+
+                {/* Authors */}
+                <p
+                  style={{
+                    fontSize: 12,
+                    color: "var(--text-muted)",
+                    marginBottom: 12,
+                  }}
+                >
+                  {paper.authors.join(", ")}
+                </p>
+
+                {/* Description */}
+                <p
+                  style={{
+                    fontSize: 13,
+                    color: "var(--text-secondary)",
+                    lineHeight: 1.6,
+                    display: "-webkit-box",
+                    WebkitLineClamp: 3,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                  }}
+                >
+                  {paper.description}
+                </p>
+
+                {/* Bottom: task count */}
+                <div
+                  style={{
+                    marginTop: 16,
+                    paddingTop: 12,
+                    borderTop: "1px solid rgba(255,255,255,0.06)",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                    {paper.tasks.length} {paper.tasks.length === 1 ? "task" : "tasks"}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 12,
+                      color: "var(--accent-cyan)",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Implement →
+                  </span>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+
+        {filtered.length === 0 && (
+          <div
+            style={{
+              textAlign: "center",
+              padding: "60px 0",
+              color: "var(--text-muted)",
+            }}
+          >
+            <p style={{ fontSize: 16, marginBottom: 8 }}>No papers found</p>
+            <p style={{ fontSize: 13 }}>Try adjusting your search or filters</p>
+          </div>
+        )}
+      </section>
 
       {/* Features Section */}
       <section style={{ padding: "80px 0 120px", textAlign: "center" }}>
@@ -198,7 +406,7 @@ export default function HomePage() {
 
         <div>
           <p style={{ color: "var(--text-secondary)", marginBottom: 24 }}>Already used by 20+ paid users and seeing 200+ submissions daily.</p>
-          <Link href="/papers" className="btn-primary" style={{ display: "inline-block", textDecoration: "none", padding: "12px 32px", fontSize: 15 }}>
+          <Link href="#papers" className="btn-primary" style={{ display: "inline-block", textDecoration: "none", padding: "12px 32px", fontSize: 15 }}>
             Get Started
           </Link>
         </div>

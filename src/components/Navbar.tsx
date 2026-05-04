@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useAuth } from "./AuthProvider";
 
 const navLinks = [
-  { href: "/papers", label: "Papers" },
+  { href: "/", label: "Papers" },
   { href: "/fundamentals", label: "Fundamentals" },
   { href: "/advanced-tracks", label: "Advanced Tracks" },
   { href: "/job-search", label: "Job Search" },

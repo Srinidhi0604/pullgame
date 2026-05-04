@@ -46,7 +46,7 @@ export function Footer() {
 
         <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
           {[
-            { href: "/", label: "Problems" },
+            { href: "/", label: "Papers" },
             { href: "/leaderboard", label: "Leaderboard" },
             { href: "/reviews", label: "Reviews" },
             { href: "/about", label: "About" },
