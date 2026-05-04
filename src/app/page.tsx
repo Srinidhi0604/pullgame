@@ -163,15 +163,15 @@ export default function HomePage() {
           {[
             {
               title: "Solve paper problems",
-              desc: "Implement ML paper ideas in code and check them with built-in tests inside the workspace.",
+              desc: "Implement Research Paper ideas in code and check them with built-in tests inside the workspace.",
             },
             {
               title: "Track real progress",
               desc: "Use your profile, progress tracking, leaderboard, and test mode to keep practicing every day.",
             },
             {
-              title: "Use the job stack",
-              desc: "Search MLE jobs, internships, research internships, and generate cold mails with CV parsing.",
+              title: "Be Job Ready",
+              desc: "Companies like Google Deepmind and meta dont want people who just mug up research papers, they need people who can implement them. Learn that with us!",
             },
             {
               title: "Unlock paid tools",
