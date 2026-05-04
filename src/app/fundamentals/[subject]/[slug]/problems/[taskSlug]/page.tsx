@@ -31,6 +31,8 @@ export default async function FundProblemPage({
       skeleton={task.skeleton}
       tests={task.tests}
       backHref={`/fundamentals/${subject}/${slug}`}
+      taskSlug={taskSlug}
+      topicExplanation={topic.description}
     />
   );
 }

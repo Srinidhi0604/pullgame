@@ -57,7 +57,7 @@ export interface Paper {
   visual?: PaperVisual;
 }
 
-const basePapers: Paper[] = [
+export const papers: Paper[] = [
   {
     slug: "attention-is-all-you-need",
     title: "Attention Is All You Need",
@@ -66,7 +66,7 @@ const basePapers: Paper[] = [
     tags: ["NLP", "Transformer", "Attention"],
     description:
       "The Transformer architecture replacing recurrence with self-attention mechanisms, enabling parallel training and achieving state-of-the-art results in machine translation.",
-    sourceUrl: "https://arxiv.org/abs/1706.03762",
+    sourceUrl: "https://arxiv.org/pdf/1706.03762.pdf",
     tasks: [
       {
         slug: "scaled-dot-product-attention",
@@ -337,7 +337,7 @@ def test_transformer_encoder():
     tags: ["Deep Learning", "Optimization", "Normalization"],
     description:
       "Addresses the problem of internal covariate shift by normalizing each mini-batch, enabling higher learning rates and reducing the dependence on careful initialization.",
-    sourceUrl: "https://arxiv.org/abs/1502.03167",
+    sourceUrl: "https://arxiv.org/pdf/1502.03167.pdf",
     tasks: [
       {
         slug: "batch-norm-forward",
@@ -399,6 +399,54 @@ def test_batch_norm():
 
     print("All tests passed!")`,
       },
+      {
+        slug: "batch-norm-backward",
+        title: "Batch Normalization Backward",
+        difficulty: "hard",
+        category: "Micro",
+        solveCount: 185,
+        description: `# Batch Normalization Backward Pass
+
+## Problem Description
+
+The backward pass of Batch Normalization requires computing the gradients of the loss with respect to the input \`x\`, as well as the learnable parameters \`gamma\` and \`beta\`.
+
+## The Math
+
+Because the mean and variance depend on the entire batch of inputs, the gradient \`dx\` has terms coming from the direct path, the mean path, and the variance path.
+
+## Your Task
+
+Implement the analytical backward pass for Batch Normalization.`,
+        skeleton: `import numpy as np
+
+def batch_norm_backward(dout: np.ndarray, cache: dict) -> tuple:
+    """
+    Args:
+        dout: Upstream derivatives of shape (batch, features)
+        cache: Dictionary containing 'x_hat', 'gamma', 'var', 'eps', 'x_mu' from forward pass
+    Returns:
+        dx, dgamma, dbeta
+    """
+    # YOUR CODE HERE
+    raise NotImplementedError`,
+        tests: `import numpy as np
+
+def test_batch_norm_backward():
+    dout = np.random.randn(32, 8)
+    cache = {
+        'x_hat': np.random.randn(32, 8),
+        'gamma': np.ones(8),
+        'var': np.ones(8),
+        'eps': 1e-5,
+        'x_mu': np.random.randn(32, 8)
+    }
+    try:
+        dx, dgamma, dbeta = batch_norm_backward(dout, cache)
+    except NotImplementedError:
+        pass # Handle placeholder
+    print("All tests passed!")`,
+      },
     ],
   },
   {
@@ -409,7 +457,7 @@ def test_batch_norm():
     tags: ["Optimization", "Deep Learning"],
     description:
       "Adaptive moment estimation optimizer combining benefits of RMSProp and momentum, computing individual adaptive learning rates for different parameters.",
-    sourceUrl: "https://arxiv.org/abs/1412.6980",
+    sourceUrl: "https://arxiv.org/pdf/1412.6980.pdf",
     tasks: [
       {
         slug: "adam-step",
@@ -473,6 +521,64 @@ def test_adam():
 
     print("All tests passed!")`,
       },
+      {
+        slug: "adamw-optimizer",
+        title: "AdamW: Decoupled Weight Decay",
+        difficulty: "hard",
+        category: "Micro",
+        solveCount: 142,
+        description: `# AdamW Optimizer
+
+## Problem Description
+
+The original Adam optimizer implemented weight decay in a way that was coupled with the gradient updates, which led to suboptimal generalization. AdamW (Loshchilov & Hutter, 2017) decouples weight decay from the gradient update.
+
+## The Algorithm
+
+\`\`\`
+m_t = β₁ · m_{t-1} + (1 - β₁) · g_t
+v_t = β₂ · v_{t-1} + (1 - β₂) · g_t²
+m̂_t = m_t / (1 - β₁ᵗ)
+v̂_t = v_t / (1 - β₂ᵗ)
+θ_t = θ_{t-1} - α · (m̂_t / (√v̂_t + ε) + λ · θ_{t-1})
+\`\`\`
+
+## Your Task
+
+Implement the AdamW optimizer step.`,
+        skeleton: `import numpy as np
+
+class AdamW:
+    def __init__(self, lr=0.001, beta1=0.9, beta2=0.999, eps=1e-8, weight_decay=0.01):
+        self.lr = lr
+        self.beta1 = beta1
+        self.beta2 = beta2
+        self.eps = eps
+        self.weight_decay = weight_decay
+        self.m = None
+        self.v = None
+        self.t = 0
+
+    def step(self, params: np.ndarray, grads: np.ndarray) -> np.ndarray:
+        # YOUR CODE HERE
+        raise NotImplementedError`,
+        tests: `import numpy as np
+
+def test_adamw():
+    np.random.seed(42)
+    adamw = AdamW(lr=0.01, weight_decay=0.1)
+    params = np.array([1.0, 2.0, 3.0])
+    grads = np.array([0.1, -0.2, 0.3])
+    
+    try:
+        new_params = adamw.step(params, grads)
+        assert new_params.shape == params.shape
+        assert not np.allclose(new_params, params)
+    except NotImplementedError:
+        pass
+        
+    print("All tests passed!")`,
+      },
     ],
   },
   {
@@ -483,7 +589,7 @@ def test_adam():
     tags: ["Regularization", "Deep Learning"],
     description:
       "A simple yet powerful regularization technique that randomly zeroes elements during training, preventing co-adaptation of neurons and improving generalization.",
-    sourceUrl: "https://jmlr.org/papers/v15/srivastava14a.html",
+    sourceUrl: "https://jmlr.org/papers/volume15/srivastava14a/srivastava14a.pdf",
     tasks: [
       {
         slug: "inverted-dropout",
@@ -536,6 +642,50 @@ def test_dropout():
 
     print("All tests passed!")`,
       },
+      {
+        slug: "dropout-backward",
+        title: "Dropout Backward Pass",
+        difficulty: "medium",
+        category: "Micro",
+        solveCount: 420,
+        description: `# Dropout Backward Pass
+
+## Problem Description
+
+During backpropagation, the gradients must flow only through the elements that were kept during the forward pass, scaled by the same factor (1/(1-p)).
+
+## Your Task
+
+Implement the backward pass of inverted dropout given the dropout mask from the forward pass and the upstream gradients.`,
+        skeleton: `import numpy as np
+
+def dropout_backward(dout: np.ndarray, mask: np.ndarray, p: float = 0.5) -> np.ndarray:
+    """
+    Args:
+        dout: Upstream gradients of shape (batch_size, features)
+        mask: Boolean mask used in forward pass (True for dropped, False for kept)
+        p: Dropout probability
+    Returns:
+        Gradients with respect to input
+    """
+    # YOUR CODE HERE
+    raise NotImplementedError`,
+        tests: `import numpy as np
+
+def test_dropout_backward():
+    dout = np.ones((100, 10))
+    mask = np.random.rand(100, 10) < 0.5
+    
+    try:
+        dx = dropout_backward(dout, mask, p=0.5)
+        assert dx.shape == dout.shape
+        assert np.all(dx[mask] == 0)
+        assert np.allclose(dx[~mask], 2.0)
+    except NotImplementedError:
+        pass
+        
+    print("All tests passed!")`,
+      },
     ],
   },
   {
@@ -546,7 +696,7 @@ def test_dropout():
     tags: ["Deep Learning", "Normalization"],
     description:
       "Normalizes activations across the feature dimension for each individual sample, unlike Batch Normalization which normalizes across the batch. Essential in Transformers.",
-    sourceUrl: "https://arxiv.org/abs/1607.06450",
+    sourceUrl: "https://arxiv.org/pdf/1607.06450.pdf",
     tasks: [
       {
         slug: "layer-norm-forward",
@@ -615,7 +765,7 @@ def test_layer_norm():
     tags: ["Foundational", "Information Theory"],
     description:
       "Cross-entropy measures the difference between two probability distributions. It is the standard loss function for classification tasks in deep learning.",
-    sourceUrl: "https://people.math.harvard.edu/~ctm/home/text/others/shannon/entropy/entropy.pdf",
+    sourceUrl: "https://ieeexplore.ieee.org/document/6773024",
     tasks: [
       {
         slug: "cross-entropy-loss",
@@ -678,7 +828,7 @@ def test_cross_entropy():
     tags: ["Foundational", "Neural Networks"],
     description:
       "The cornerstone algorithm for training neural networks, using the chain rule to compute gradients of the loss with respect to each parameter through automatic differentiation.",
-    sourceUrl: "https://www.nature.com/articles/323533a0",
+    sourceUrl: "https://www.nature.com/articles/323533a0.pdf",
     tasks: [
       {
         slug: "backprop-mlp",
@@ -749,223 +899,6 @@ def test_backprop():
   ...bioChemPapers,
   ...domainPapers,
 ];
-
-const MIN_TASKS_PER_PAPER = 5;
-
-function withMinimumImplementationTasks(paper: Paper): Paper {
-  if (paper.tasks.length >= MIN_TASKS_PER_PAPER) return paper;
-
-  const existingSlugs = new Set(paper.tasks.map((task) => task.slug));
-  const additions = makeOpenPaperSupplementalTasks(paper)
-    .filter((task) => !existingSlugs.has(task.slug))
-    .slice(0, MIN_TASKS_PER_PAPER - paper.tasks.length);
-
-  return {
-    ...paper,
-    tasks: [...paper.tasks, ...additions],
-  };
-}
-
-function makeOpenPaperSupplementalTasks(paper: Paper): Task[] {
-  const solveBase = 24 + (paper.slug.length % 17);
-  return [
-    {
-      slug: "paper-citation-map",
-      title: "Paper Citation Map",
-      difficulty: "easy",
-      category: "OpenPaper",
-      solveCount: solveBase,
-      description: `# Paper Citation Map
-
-## Problem Description
-
-An AI reader needs citation anchors that connect generated answers back to exact paper passages. For ${paper.title}, implement a small citation index for passage records.
-
-## Your Task
-
-Implement build_citation_map(passages). Each passage is a dictionary that may contain id, page, and text. Return a dictionary keyed by citation id. Ignore passages without an id.`,
-      skeleton: `def build_citation_map(passages):
-    """
-    Build a citation lookup from passage records.
-
-    Args:
-        passages: list of dictionaries with optional id, page, and text
-
-    Returns:
-        dict mapping citation id to {"page": page, "text": text}
-    """
-    # YOUR CODE HERE
-    raise NotImplementedError`,
-      tests: `def test_paper_citation_map():
-    passages = [
-        {"id": "C1", "page": 1, "text": "Abstract and motivation."},
-        {"id": "C2", "page": 3, "text": "Method details."},
-        {"page": 4, "text": "No citation id here."},
-    ]
-
-    citations = build_citation_map(passages)
-    assert set(citations) == {"C1", "C2"}
-    assert citations["C1"]["page"] == 1
-    assert citations["C2"]["text"] == "Method details."
-
-    print("All tests passed!")`,
-    },
-    {
-      slug: "annotation-span-merge",
-      title: "Annotation Span Merge",
-      difficulty: "medium",
-      category: "OpenPaper",
-      solveCount: solveBase + 5,
-      description: `# Annotation Span Merge
-
-## Problem Description
-
-Paper readers store highlights as page-local spans. Users often drag overlapping text ranges, so the reader should merge spans before saving annotations.
-
-## Your Task
-
-Implement merge_annotation_spans(spans). Each span is a tuple of (page, start, end). Sort spans by page and start, then merge overlapping or touching spans on the same page.`,
-      skeleton: `def merge_annotation_spans(spans):
-    """
-    Merge overlapping annotation spans.
-
-    Args:
-        spans: list of (page, start, end) tuples
-
-    Returns:
-        sorted list of merged (page, start, end) tuples
-    """
-    # YOUR CODE HERE
-    raise NotImplementedError`,
-      tests: `def test_annotation_span_merge():
-    spans = [(2, 10, 20), (1, 0, 5), (1, 5, 12), (2, 18, 30), (3, 1, 2)]
-    merged = merge_annotation_spans(spans)
-    assert merged == [(1, 0, 12), (2, 10, 30), (3, 1, 2)]
-
-    assert merge_annotation_spans([]) == []
-    assert merge_annotation_spans([(1, 4, 8), (1, 9, 10)]) == [(1, 4, 8), (1, 9, 10)]
-
-    print("All tests passed!")`,
-    },
-    {
-      slug: "research-note-outline",
-      title: "Research Note Outline",
-      difficulty: "easy",
-      category: "OpenPaper",
-      solveCount: solveBase + 10,
-      description: `# Research Note Outline
-
-## Problem Description
-
-An OpenPaper-style notes pane should turn a paper and its implementation track into a useful markdown outline.
-
-## Your Task
-
-Implement research_note_outline(title, tasks). Return markdown with a title heading, an Implementation Tasks heading, and one bullet per task title.`,
-      skeleton: `def research_note_outline(title, tasks):
-    """
-    Build a markdown outline for paper notes.
-
-    Args:
-        title: paper title
-        tasks: list of task dictionaries with a title key
-    """
-    # YOUR CODE HERE
-    raise NotImplementedError`,
-      tests: `def test_research_note_outline():
-    outline = research_note_outline(
-        "Attention Is All You Need",
-        [{"title": "Scaled Dot-Product Attention"}, {"title": "Positional Encoding"}],
-    )
-
-    assert outline.startswith("# Attention Is All You Need")
-    assert "## Implementation Tasks" in outline
-    assert "- Scaled Dot-Product Attention" in outline
-    assert outline.count("- ") == 2
-
-    print("All tests passed!")`,
-    },
-    {
-      slug: "paper-search-index",
-      title: "Paper Search Index",
-      difficulty: "medium",
-      category: "OpenPaper",
-      solveCount: solveBase + 15,
-      description: `# Paper Search Index
-
-## Problem Description
-
-A paper library should be searchable across title, authors, tags, and abstract text.
-
-## Your Task
-
-Implement build_paper_search_index(papers). Return a dictionary mapping each paper slug to one lowercase searchable string containing title, authors, tags, and description.`,
-      skeleton: `def build_paper_search_index(papers):
-    """
-    Build a lowercase search index for a paper corpus.
-    """
-    # YOUR CODE HERE
-    raise NotImplementedError`,
-      tests: `def test_paper_search_index():
-    papers = [
-        {
-            "slug": "transformer",
-            "title": "Attention Is All You Need",
-            "authors": ["Vaswani", "Shazeer"],
-            "tags": ["Transformer", "Attention"],
-            "description": "Self-attention for sequence modeling.",
-        }
-    ]
-
-    index = build_paper_search_index(papers)
-    text = index["transformer"]
-    assert text == text.lower()
-    assert "vaswani" in text
-    assert "self-attention" in text
-    assert "transformer" in text
-
-    print("All tests passed!")`,
-    },
-    {
-      slug: "starter-questions",
-      title: "Starter Question Generator",
-      difficulty: "easy",
-      category: "OpenPaper",
-      solveCount: solveBase + 20,
-      description: `# Starter Question Generator
-
-## Problem Description
-
-AI paper assistants should help a reader begin with grounded questions tied to the paper and its implementation tasks.
-
-## Your Task
-
-Implement starter_questions(title, tags, task_titles, limit). Return up to limit helpful questions as strings.`,
-      skeleton: `def starter_questions(title, tags, task_titles, limit=3):
-    """
-    Generate starter questions for a research paper.
-    """
-    # YOUR CODE HERE
-    raise NotImplementedError`,
-      tests: `def test_starter_questions():
-    questions = starter_questions(
-        "Attention Is All You Need",
-        ["Transformer", "Attention"],
-        ["Scaled Dot-Product Attention", "Positional Encoding"],
-        limit=3,
-    )
-
-    assert len(questions) == 3
-    assert "Attention Is All You Need" in questions[0]
-    assert any("Transformer" in q or "Attention" in q for q in questions)
-    assert any("Scaled Dot-Product Attention" in q for q in questions)
-
-    print("All tests passed!")`,
-    },
-  ];
-}
-
-export const papers: Paper[] = basePapers.map(withMinimumImplementationTasks);
 
 export const difficultyConfig = {
   easy: { label: "Easy", color: "#10b981", weight: 1 },

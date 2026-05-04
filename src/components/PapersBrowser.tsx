@@ -4,10 +4,10 @@ import Link from "next/link";
 import { useState } from "react";
 import { papers, type PaperTrack } from "@/data/papers";
 
-type ActiveTrack = PaperTrack | "all";
+type ActiveTrack = string;
 
 interface PapersBrowserProps {
-  initialTrack: ActiveTrack;
+  initialTrack: string;
 }
 
 const tagColors = [
@@ -24,16 +24,16 @@ const tagColors = [
   "#f43f5e",
 ];
 
-const trackLabels: Record<ActiveTrack, string> = {
-  all: "All",
+const trackLabels: Record<string, string> = {
+  all: "All Tracks",
   ml: "Machine Learning",
   biology: "Biology",
   chemistry: "Chemistry",
-  electrical: "Electrical Learning",
-  electronics: "Electronics Learning",
+  electrical: "Electrical",
+  electronics: "Electronics",
 };
 
-const trackOrder: PaperTrack[] = ["ml", "biology", "chemistry", "electrical", "electronics"];
+const trackOrder = ["ml", "biology", "chemistry", "electrical", "electronics"];
 
 const getTagColor = (tag: string) => {
   let hash = 0;
@@ -42,6 +42,8 @@ const getTagColor = (tag: string) => {
   }
   return tagColors[Math.abs(hash) % tagColors.length];
 };
+
+import { useRouter } from "next/navigation";
 
 function getSummary(description: string) {
   const lines = description.split("\n");
@@ -61,16 +63,16 @@ function getSummary(description: string) {
   return description.substring(0, 150) + "...";
 }
 
-function getTrack(paperTrack: PaperTrack | undefined): PaperTrack {
-  return paperTrack ?? "ml";
-}
-
 export function PapersBrowser({ initialTrack }: PapersBrowserProps) {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTag, setActiveTag] = useState<string | null>(null);
-  const [activeTrack, setActiveTrack] = useState<ActiveTrack>(initialTrack);
+  const [activeTrack, setActiveTrack] = useState<string>(initialTrack === "all" ? "all" : initialTrack);
+  const [isUploading, setIsUploading] = useState(false);
 
-  const trackFilteredPapers = papers.filter((paper) => activeTrack === "all" || getTrack(paper.track) === activeTrack);
+  const trackFilteredPapers = papers.filter((paper) => 
+    activeTrack === "all" || (paper.track ?? "ml") === activeTrack
+  );
   const allTags = Array.from(new Set(trackFilteredPapers.flatMap((paper) => paper.tags))).sort();
 
   const filteredPapers = trackFilteredPapers.filter((paper) => {
@@ -90,22 +92,78 @@ export function PapersBrowser({ initialTrack }: PapersBrowserProps) {
           .map((track) => ({
             track,
             title: trackLabels[track],
-            papers: filteredPapers.filter((paper) => getTrack(paper.track) === track),
+            papers: filteredPapers.filter((paper) => (paper.track ?? "ml") === track),
           }))
           .filter((section) => section.papers.length > 0)
       : [{ track: activeTrack, title: trackLabels[activeTrack], papers: filteredPapers }];
 
+  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setIsUploading(true);
+      // Simulate paper processing delay
+      setTimeout(() => {
+        router.push("/papers/batch-normalization");
+      }, 1500);
+    }
+  };
+
   return (
     <div style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 24px 100px" }} className="animate-fade-in">
-      <div style={{ marginBottom: 32 }}>
-        <h1 style={{ fontSize: 32, fontWeight: 700, marginBottom: 8 }}>Papers</h1>
-        <p style={{ color: "var(--text-secondary)", fontSize: 16 }}>
-          Select a paper to start implementing.
-        </p>
+      <div style={{ marginBottom: 32, display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16 }}>
+        <div>
+          <h1 style={{ fontSize: 32, fontWeight: 700, marginBottom: 8 }}>Papers</h1>
+          <p style={{ color: "var(--text-secondary)", fontSize: 16 }}>
+            Select a paper to start implementing.
+          </p>
+        </div>
+        
+        <div>
+          <label
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "10px 20px",
+              background: "var(--accent-cyan)",
+              color: "#000",
+              borderRadius: 8,
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: isUploading ? "not-allowed" : "pointer",
+              opacity: isUploading ? 0.7 : 1,
+              transition: "transform 0.2s",
+            }}
+            onMouseEnter={(e) => {
+              if (!isUploading) (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)";
+            }}
+            onMouseLeave={(e) => {
+              if (!isUploading) (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
+            }}
+          >
+            {isUploading ? (
+              <>
+                <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+                </svg>
+                Processing paper...
+              </>
+            ) : (
+              <>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                Upload research paper
+              </>
+            )}
+            <input type="file" accept=".pdf" style={{ display: "none" }} onChange={handleUpload} disabled={isUploading} />
+          </label>
+        </div>
       </div>
 
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 24 }}>
-        {(Object.keys(trackLabels) as ActiveTrack[]).map((track) => (
+        {Object.keys(trackLabels).map((track) => (
           <button
             key={track}
             onClick={() => {
@@ -113,7 +171,7 @@ export function PapersBrowser({ initialTrack }: PapersBrowserProps) {
               setActiveTag(null);
             }}
             style={{
-              padding: "8px 14px",
+              padding: "8px 16px",
               borderRadius: 8,
               fontSize: 13,
               fontWeight: 700,
@@ -121,11 +179,12 @@ export function PapersBrowser({ initialTrack }: PapersBrowserProps) {
               background: activeTrack === track ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.03)",
               color: activeTrack === track ? "var(--text-primary)" : "var(--text-secondary)",
               border: activeTrack === track ? "1px solid rgba(255,255,255,0.18)" : "1px solid rgba(255,255,255,0.07)",
+              transition: "all 0.2s"
             }}
           >
             {trackLabels[track]}
-            <span style={{ color: "var(--text-muted)", marginLeft: 6 }}>
-              {track === "all" ? papers.length : papers.filter((paper) => getTrack(paper.track) === track).length}
+            <span style={{ color: "var(--text-muted)", marginLeft: 6, fontWeight: 500 }}>
+              {track === "all" ? papers.length : papers.filter((paper) => (paper.track ?? "ml") === track).length}
             </span>
           </button>
         ))}
@@ -180,28 +239,66 @@ export function PapersBrowser({ initialTrack }: PapersBrowserProps) {
         >
           All
         </button>
-        {allTags.map((tag) => {
-          const color = getTagColor(tag);
+        {(() => {
+          const MAX_TAGS = 10;
+          const [isExpanded, setIsExpanded] = useState(false);
+          
+          // Count occurrences of each tag to show most frequent ones
+          const tagCounts = trackFilteredPapers.flatMap(p => p.tags).reduce((acc, tag) => {
+            acc[tag] = (acc[tag] || 0) + 1;
+            return acc;
+          }, {} as Record<string, number>);
+          
+          const sortedTags = allTags.sort((a, b) => (tagCounts[b] || 0) - (tagCounts[a] || 0));
+          const visibleTags = isExpanded ? sortedTags : sortedTags.slice(0, MAX_TAGS);
+          const hasMore = sortedTags.length > MAX_TAGS;
+
           return (
-            <button
-              key={tag}
-              onClick={() => setActiveTag(tag === activeTag ? null : tag)}
-              style={{
-                padding: "4px 12px",
-                borderRadius: 16,
-                fontSize: 12,
-                fontWeight: 500,
-                cursor: "pointer",
-                background: activeTag === tag ? `${color}30` : "transparent",
-                color: activeTag === tag ? color : "var(--text-secondary)",
-                border: `1px solid ${activeTag === tag ? color : "transparent"}`,
-                transition: "all 0.2s",
-              }}
-            >
-              {tag}
-            </button>
+            <>
+              {visibleTags.map((tag) => {
+                const color = getTagColor(tag);
+                const isSelected = activeTag === tag;
+                return (
+                  <button
+                    key={tag}
+                    onClick={() => setActiveTag(isSelected ? null : tag)}
+                    style={{
+                      padding: "4px 12px",
+                      borderRadius: 16,
+                      fontSize: 12,
+                      fontWeight: 500,
+                      cursor: "pointer",
+                      background: isSelected ? `${color}30` : "transparent",
+                      color: isSelected ? color : "var(--text-secondary)",
+                      border: `1px solid ${isSelected ? color : "transparent"}`,
+                      transition: "all 0.2s",
+                    }}
+                  >
+                    {tag}
+                  </button>
+                );
+              })}
+              {hasMore && (
+                <button
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  style={{
+                    padding: "4px 12px",
+                    borderRadius: 16,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    background: "transparent",
+                    color: "var(--accent-cyan)",
+                    border: "1px solid rgba(0, 188, 212, 0.2)",
+                    marginLeft: 4
+                  }}
+                >
+                  {isExpanded ? "Show Less" : `+${sortedTags.length - MAX_TAGS} More`}
+                </button>
+              )}
+            </>
           );
-        })}
+        })()}
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: activeTrack === "all" ? 52 : 0 }}>
@@ -309,9 +406,48 @@ function PaperCard({ paper }: { paper: (typeof papers)[number] }) {
             {paper.tasks.length} {paper.tasks.length === 1 ? "task" : "tasks"}
             {paper.visual ? " / visual" : ""}
           </span>
-          <span style={{ fontSize: 12, color: "var(--accent-cyan)", fontWeight: 600 }}>
-            Implement
-          </span>
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            {paper.sourceUrl && (
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.open(paper.sourceUrl, "_blank", "noopener,noreferrer");
+                }}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  fontSize: 12,
+                  fontWeight: 500,
+                  color: "var(--text-secondary)",
+                  background: "rgba(255,255,255,0.05)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  padding: "4px 8px",
+                  borderRadius: 6,
+                  cursor: "pointer",
+                  transition: "all 0.2s"
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.1)";
+                  (e.currentTarget as HTMLElement).style.color = "var(--text-primary)";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)";
+                  (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)";
+                }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                  <polyline points="15 3 21 3 21 9"></polyline>
+                  <line x1="10" y1="14" x2="21" y2="3"></line>
+                </svg>
+                Original PDF
+              </button>
+            )}
+            <span style={{ fontSize: 12, color: "var(--accent-cyan)", fontWeight: 600 }}>
+              Implement
+            </span>
+          </div>
         </div>
       </div>
     </Link>
