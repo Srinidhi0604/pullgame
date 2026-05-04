@@ -1,8 +1,8 @@
-# openPAPER 
+# PaperLabs 
 
 > **Don't just read the paper. Compile it.**
 
-openPAPER is an interactive, browser-based educational platform designed to bridge the gap between theoretical research and practical implementation. It allows machine learning engineers, researchers, and students to implement state-of-the-art models from scratch, line by line, directly in the browser.
+PaperLabs is an interactive, browser-based educational platform designed to bridge the gap between theoretical research and practical implementation. It allows machine learning engineers, researchers, and students to implement state-of-the-art models from scratch, line by line, directly in the browser.
 
 ## 🌟 Key Features
 
@@ -31,7 +31,7 @@ Secure user accounts powered by JWT, bcrypt, and MongoDB. Track your solved task
 
 ## 🛠️ Technology Stack
 
-openPAPER is built with a modern, high-performance web stack:
+PaperLabs is built with a modern, high-performance web stack:
 - **Frontend Framework**: [Next.js 16](https://nextjs.org/) (App Router)
 - **UI Library**: [React 19](https://react.dev/)
 - **Styling**: Vanilla CSS + Inline styles (Minimalist, dark-mode, glassmorphism aesthetic)
@@ -61,7 +61,7 @@ npm install
 ### 3. Environment Variables
 Create a \`.env\` file in the root of the project and provide your MongoDB connection string and JWT secret:
 \`\`\`env
-MONGODB_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/openpaper
+MONGODB_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/paperlabs
 JWT_SECRET=your_super_secret_jwt_key
 \`\`\`
 
@@ -102,7 +102,7 @@ src/
 
 ## 🎨 Design Philosophy
 
-openPAPER adheres to a strict **minimalist, brutalist-inspired** design aesthetic. We prioritize readability, focus, and performance. The UI utilizes monochromatic grayscale tones with subtle, purpose-driven color accents (e.g., cyan for interaction, purple/green/blue for specific domains).
+PaperLabs adheres to a strict **minimalist, brutalist-inspired** design aesthetic. We prioritize readability, focus, and performance. The UI utilizes monochromatic grayscale tones with subtle, purpose-driven color accents (e.g., cyan for interaction, purple/green/blue for specific domains).
 
 ---
 

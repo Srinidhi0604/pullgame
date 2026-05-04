@@ -54,10 +54,11 @@ export default function HomePage() {
               from scratch
             </span>
             , line by line.
+            It is Leetcode for Research Papers.
           </p>
 
           <div>
-            <Link href="/papers" className="btn-primary" style={{ display: "inline-block", textDecoration: "none", padding: "14px 32px", fontSize: 16 }}>
+            <Link href="/papers" className="btn-minimalist">
               Start Implementing
             </Link>
           </div>
@@ -153,10 +154,10 @@ export default function HomePage() {
       {/* Features Section */}
       <section style={{ padding: "80px 0 120px", textAlign: "center" }}>
         <h2 style={{ fontSize: "clamp(32px, 4vw, 48px)", fontWeight: 600, marginBottom: 16, letterSpacing: "-0.02em" }}>
-          What openPAPER <span style={{ color: "var(--accent-pink)" }}>actually offers</span>
+          What PaperLabs <span style={{ color: "var(--accent-pink)" }}>actually offers</span>
         </h2>
         <p style={{ color: "var(--text-secondary)", fontSize: 18, maxWidth: 600, margin: "0 auto 64px", lineHeight: 1.6 }}>
-          openPAPER is a place to practice Research paper implementations, track progress, prepare for interviews, and use tools for Research roles.
+          PaperLabs is a place to practice Research paper implementations, track progress, prepare for interviews, and use tools for Research roles.
         </p>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 24, textAlign: "left", marginBottom: 64 }}>

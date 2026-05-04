@@ -6,7 +6,7 @@ import { AuthProvider } from "@/components/AuthProvider";
 import { ToastContainer } from "@/components/Toast";
 
 export const metadata: Metadata = {
-  title: "PullGame — Implement ML Papers, One Function at a Time",
+  title: "PaperLabs — Implement Research Papers, One Function at a Time",
   description:
     "Practice implementing machine learning paper concepts through micro-tasks with unit tests. Master attention mechanisms, optimizers, normalization layers, and more.",
   keywords: ["machine learning", "deep learning", "practice", "transformers", "attention", "implementation"],

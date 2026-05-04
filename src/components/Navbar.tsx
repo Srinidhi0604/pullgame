@@ -58,7 +58,7 @@ export function Navbar() {
             &gt;_
           </span>
           <span style={{ fontWeight: 700, fontSize: 20, letterSpacing: "-0.02em" }}>
-            openPAPER
+            PaperLabs
           </span>
         </Link>
 

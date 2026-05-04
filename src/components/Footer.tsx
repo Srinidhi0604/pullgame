@@ -36,8 +36,8 @@ export function Footer() {
           <span style={{ fontWeight: 600, fontSize: 16, color: "var(--text-muted)", letterSpacing: "-0.05em" }}>
             &gt;_
           </span>
-          <span style={{ fontWeight: 600, fontSize: 15, color: "var(--text-secondary)", letterSpacing: "-0.02em" }}>
-            openPAPER
+          <span style={{ fontWeight: 700, fontSize: 20, letterSpacing: "-0.02em" }}>
+            PaperLabs
           </span>
         </div>
 
@@ -69,7 +69,7 @@ export function Footer() {
 
         {/* Copyright */}
         <p style={{ color: "#666", fontSize: 12, margin: 0 }}>
-          © {new Date().getFullYear()} openPAPER.
+          © {new Date().getFullYear()} PaperLabs.
         </p>
       </div>
     </footer>
