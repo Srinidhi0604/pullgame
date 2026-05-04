@@ -1324,6 +1324,15 @@ export const tagColors: Record<string, string> = {
   "ML": "#ec4899",
   "Classification": "#d946ef",
   "Kernel Methods": "#a855f7",
+  "Computer Vision": "#0ea5e9",
+  "CNN": "#38bdf8",
+  "Residual Networks": "#7dd3fc",
+  "Generative Models": "#f472b6",
+  "GANs": "#fb7185",
+  "Latent Space": "#c084fc",
+  "Pre-training": "#818cf8",
+  "Embeddings": "#34d399",
+  "Unsupervised": "#a3e635",
 };
 
 // Helper to find a paper by slug

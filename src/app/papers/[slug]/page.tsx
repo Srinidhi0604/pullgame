@@ -55,8 +55,10 @@ export default async function PaperDetailPage({ params }: { params: Promise<{ sl
           </h1>
 
           {/* Read Original button */}
-          <button
-            className="btn-secondary"
+          <a
+            href={paper.paperUrl}
+            target="_blank"
+            rel="noopener noreferrer"
             style={{
               padding: "8px 18px",
               fontSize: 13,
@@ -65,10 +67,16 @@ export default async function PaperDetailPage({ params }: { params: Promise<{ sl
               gap: 6,
               whiteSpace: "nowrap",
               flexShrink: 0,
+              background: "rgba(255,255,255,0.05)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              borderRadius: 8,
+              color: "var(--text-secondary)",
+              textDecoration: "none",
+              transition: "all 0.2s",
             }}
           >
             📄 Read Original
-          </button>
+          </a>
         </div>
 
         {/* Year + Authors as pills */}
