@@ -23,7 +23,7 @@ export default function LeaderboardPage() {
             marginBottom: 12,
           }}
         >
-          Leader<span className="gradient-text">board</span>
+          Leader<span style={{ color: "white" }}>board</span>
         </h1>
         <p style={{ fontSize: 15, color: "var(--text-secondary)" }}>
           Top implementers ranked by score. Score = Σ(difficulty_weight × problems_solved)
@@ -59,7 +59,7 @@ export default function LeaderboardPage() {
       </div>
 
       {/* Table */}
-      <div className="glass-card-static animate-slide-up" style={{ overflow: "hidden" }}>
+      <div className="animate-slide-up" style={{ overflow: "hidden", background: "#050505", border: "1px solid #222", borderRadius: 16 }}>
         {/* Table Header */}
         <div
           style={{
@@ -115,28 +115,14 @@ export default function LeaderboardPage() {
                   }
                 }}
               >
-                {/* Rank */}
                 <span
                   style={{
                     fontWeight: 800,
-                    fontSize: rank <= 3 ? 18 : 14,
-                    color:
-                      rank === 1
-                        ? "#fbbf24"
-                        : rank === 2
-                          ? "#94a3b8"
-                          : rank === 3
-                            ? "#d97706"
-                            : "var(--text-muted)",
+                    fontSize: 16,
+                    color: "white"
                   }}
                 >
-                  {rank <= 3
-                    ? rank === 1
-                      ? "🥇"
-                      : rank === 2
-                        ? "🥈"
-                        : "🥉"
-                    : `#${rank}`}
+                  {`#${rank}`}
                 </span>
 
                 {/* User */}
@@ -146,7 +132,8 @@ export default function LeaderboardPage() {
                       width: 36,
                       height: 36,
                       borderRadius: "50%",
-                      background: `hsl(${(rank * 47) % 360}, 60%, 40%)`,
+                      background: "#111",
+                      border: "1px solid #333",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
@@ -168,8 +155,8 @@ export default function LeaderboardPage() {
                             marginLeft: 8,
                             padding: "2px 8px",
                             borderRadius: 10,
-                            background: "rgba(6, 182, 212, 0.15)",
-                            color: "var(--accent-cyan)",
+                            background: "#222",
+                            color: "white",
                             fontWeight: 600,
                           }}
                         >
@@ -181,8 +168,11 @@ export default function LeaderboardPage() {
                       <span
                         style={{
                           fontSize: 10,
-                          color: "var(--accent-purple)",
+                          color: "#9ca3af",
                           fontWeight: 600,
+                          border: "1px solid #333",
+                          padding: "2px 6px",
+                          borderRadius: 4
                         }}
                       >
                         PRO
@@ -209,14 +199,11 @@ export default function LeaderboardPage() {
                     textAlign: "center",
                     fontWeight: 600,
                     fontSize: 14,
-                    color:
-                      user.currentStreak >= 7
-                        ? "var(--accent-amber)"
-                        : "var(--text-secondary)",
+                    color: "white",
                   }}
                 >
                   {user.currentStreak > 0
-                    ? `🔥 ${user.currentStreak}d`
+                    ? `${user.currentStreak}d`
                     : "—"}
                 </span>
 
@@ -226,8 +213,8 @@ export default function LeaderboardPage() {
                     textAlign: "right",
                     fontWeight: 800,
                     fontSize: 16,
+                    color: "white"
                   }}
-                  className="gradient-text"
                 >
                   {user.score}
                 </span>
@@ -239,7 +226,6 @@ export default function LeaderboardPage() {
 
       {/* Score explanation */}
       <div
-        className="glass-card-static"
         style={{
           padding: 20,
           marginTop: 24,
@@ -249,22 +235,25 @@ export default function LeaderboardPage() {
           flexWrap: "wrap",
           fontSize: 13,
           color: "var(--text-muted)",
+          border: "1px solid #222",
+          borderRadius: 16,
+          background: "#050505"
         }}
       >
         <span>
-          <span className="badge-easy" style={{ padding: "2px 8px", borderRadius: 10, fontSize: 11, marginRight: 6 }}>
+          <span style={{ padding: "2px 8px", borderRadius: 10, fontSize: 11, marginRight: 6, border: "1px solid #333", color: "white" }}>
             Easy
           </span>
           ×1 point
         </span>
         <span>
-          <span className="badge-medium" style={{ padding: "2px 8px", borderRadius: 10, fontSize: 11, marginRight: 6 }}>
+          <span style={{ padding: "2px 8px", borderRadius: 10, fontSize: 11, marginRight: 6, border: "1px solid #333", color: "white" }}>
             Medium
           </span>
           ×2 points
         </span>
         <span>
-          <span className="badge-hard" style={{ padding: "2px 8px", borderRadius: 10, fontSize: 11, marginRight: 6 }}>
+          <span style={{ padding: "2px 8px", borderRadius: 10, fontSize: 11, marginRight: 6, border: "1px solid #333", color: "white" }}>
             Hard
           </span>
           ×3 points

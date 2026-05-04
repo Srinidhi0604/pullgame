@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { problems } from "@/data/problems";
+import { papers } from "@/data/papers";
 
 // Define consistent colors for tags based on their string values
 const tagColors = [
@@ -40,11 +40,12 @@ export default function PapersPage() {
   const [activeTag, setActiveTag] = useState<string | null>(null);
 
   // Extract all unique tags
-  const allTags = Array.from(new Set(problems.flatMap((p) => p.tags))).sort();
+  const allTags = Array.from(new Set(papers.flatMap((p) => p.tags))).sort();
 
-  const filteredProblems = problems.filter((p) => {
+  const filteredPapers = papers.filter((p) => {
     const matchesSearch = p.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          p.paper.toLowerCase().includes(searchQuery.toLowerCase());
+                          p.authors.some(a => a.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                          p.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesTag = activeTag ? p.tags.includes(activeTag) : true;
     return matchesSearch && matchesTag;
   });
@@ -139,10 +140,10 @@ export default function PapersPage() {
         )})}
       </div>
 
-      {/* Problems Grid */}
+      {/* Papers Grid */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))", gap: 24 }} className="stagger-children">
-        {filteredProblems.map((problem) => (
-          <Link href={`/problems/${problem.slug}`} key={problem.slug} style={{ textDecoration: "none" }}>
+        {filteredPapers.map((paper) => (
+          <Link href={`/papers/${paper.slug}`} key={paper.slug} style={{ textDecoration: "none" }}>
             <div
               style={{
                 background: "rgba(0,0,0,0.4)",
@@ -165,7 +166,8 @@ export default function PapersPage() {
             >
               {/* Card Header Tags */}
               <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
-                {problem.tags.map(tag => {
+                <span className="year-badge" style={{ padding: "2px 8px", borderRadius: 12, background: "rgba(255,255,255,0.1)", fontSize: 11, fontWeight: 600 }}>{paper.year}</span>
+                {paper.tags.map(tag => {
                   const color = getTagColor(tag);
                   return (
                   <span
@@ -195,23 +197,32 @@ export default function PapersPage() {
               </div>
 
               <h3 style={{ fontSize: 20, fontWeight: 600, color: "var(--text-primary)", marginBottom: 8, lineHeight: 1.3 }}>
-                {problem.title}
+                {paper.title}
               </h3>
               
-              {/* Parse author/year loosely if possible, or just render paper */}
               <p style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 20 }}>
-                {problem.paper.replace(/\(.*\)/, "").trim() || problem.paper}
+                {paper.authors.join(", ")}
               </p>
 
-              <p style={{ fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.5, marginTop: "auto" }}>
-                {getSummary(problem.description)}
+              <p style={{ fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.5, marginTop: "auto", marginBottom: 16 }}>
+                {getSummary(paper.description)}
               </p>
+
+              {/* Bottom: task count */}
+              <div style={{ paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.06)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                  {paper.tasks.length} {paper.tasks.length === 1 ? "task" : "tasks"}
+                </span>
+                <span style={{ fontSize: 12, color: "var(--accent-cyan)", fontWeight: 600 }}>
+                  Implement →
+                </span>
+              </div>
             </div>
           </Link>
         ))}
       </div>
       
-      {filteredProblems.length === 0 && (
+      {filteredPapers.length === 0 && (
         <div style={{ textAlign: "center", padding: "60px 0", color: "var(--text-muted)" }}>
           <p>No papers found matching your criteria.</p>
         </div>
