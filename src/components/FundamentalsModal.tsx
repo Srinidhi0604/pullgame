@@ -6,6 +6,10 @@ import Link from "next/link";
 function getTopicHref(topic: ModalTopic): string {
   if (topic.category === "NUMPY") return `/fundamentals/numpy/${topic.id.replace("numpy-", "")}`;
   if (topic.category === "PANDAS") return `/fundamentals/pandas/${topic.id.replace("pandas-", "")}`;
+  if (topic.category === "BIOLOGY") return `/fundamentals/biology/${topic.id.replace("biology-", "")}`;
+  if (topic.category === "CHEMISTRY") return `/fundamentals/chemistry/${topic.id.replace("chemistry-", "")}`;
+  if (topic.category === "ELECTRICAL") return `/fundamentals/electrical/${topic.id.replace("electrical-", "")}`;
+  if (topic.category === "ELECTRONICS") return `/fundamentals/electronics/${topic.id.replace("electronics-", "")}`;
   return `/fundamentals/ml150/${topic.id}`;
 }
 
@@ -14,6 +18,7 @@ export type ModalTopic = {
   title: string;
   category: string;
   description: string;
+  systems?: string[];
   tasks: string[];
 };
 
@@ -26,6 +31,10 @@ const categoryColors: Record<string, string> = {
   ADVANCED: "#ef4444",
   NUMPY: "#4a9eff",
   PANDAS: "#22c55e",
+  BIOLOGY: "#10b981",
+  CHEMISTRY: "#f59e0b",
+  ELECTRICAL: "#38bdf8",
+  ELECTRONICS: "#ec4899",
 };
 
 export const allTopics: ModalTopic[] = [
@@ -406,6 +415,135 @@ export const allTopics: ModalTopic[] = [
       "Data quality report generator",
     ],
   },
+  // Domain fundamentals
+  {
+    id: "biology-sequence-alignment",
+    title: "Sequence Alignment",
+    category: "BIOLOGY",
+    description: "Implement DNA/RNA sequence comparison primitives used in genome search, variant triage, and pathogen monitoring.",
+    systems: ["Clinical genomics", "Pathogen surveillance", "Protein homology"],
+    tasks: ["GC Content", "Hamming Distance", "Global Alignment Score"],
+  },
+  {
+    id: "biology-gene-expression",
+    title: "Gene Expression",
+    category: "BIOLOGY",
+    description: "Build normalization and ranking utilities for RNA-seq, single-cell analysis, biomarkers, and treatment comparisons.",
+    systems: ["Single-cell analysis", "Biomarker discovery", "Drug response"],
+    tasks: ["Counts Per Million", "Log2 Fold Change", "Top Marker Genes"],
+  },
+  {
+    id: "biology-protein-structure",
+    title: "Protein Structure",
+    category: "BIOLOGY",
+    description: "Implement geometric measures used to compare structures, validate docking poses, and inspect protein contacts.",
+    systems: ["Protein folding", "Drug docking", "Structure validation"],
+    tasks: ["3D Euclidean Distance", "Contact Pairs", "Structure RMSD"],
+  },
+  {
+    id: "biology-variant-analysis",
+    title: "Variant Analysis",
+    category: "BIOLOGY",
+    description: "Build parsers, counters, and score comparisons used in clinical variant annotation and cohort reporting.",
+    systems: ["Clinical triage", "Population genetics", "Genome reports"],
+    tasks: ["Parse Variant Notation", "Genotype Counts", "Pathogenicity Delta"],
+  },
+  {
+    id: "chemistry-molecular-representations",
+    title: "Molecular Representations",
+    category: "CHEMISTRY",
+    description: "Turn chemical formulas and SMILES-like strings into computable structures for search and property prediction.",
+    systems: ["Molecule search", "Property prediction", "Lab inventory"],
+    tasks: ["Formula Counts", "Molecular Weight", "Tokenize SMILES"],
+  },
+  {
+    id: "chemistry-fingerprints-similarity",
+    title: "Fingerprints and Similarity",
+    category: "CHEMISTRY",
+    description: "Build binary fingerprints and compare compounds with Tanimoto similarity for virtual screening and analog search.",
+    systems: ["Virtual screening", "Analog search", "Compound clustering"],
+    tasks: ["Fold Fingerprint", "Tanimoto Similarity", "Nearest Molecule"],
+  },
+  {
+    id: "chemistry-reaction-analysis",
+    title: "Reaction Analysis",
+    category: "CHEMISTRY",
+    description: "Validate atom balance and rank experimental outcomes for reaction planning and optimization workflows.",
+    systems: ["Reaction planning", "Yield optimization", "Lab automation"],
+    tasks: ["Atom Balance", "Balanced Reaction Check", "Rank Reaction Yields"],
+  },
+  {
+    id: "chemistry-docking-energetics",
+    title: "Docking and Energetics",
+    category: "CHEMISTRY",
+    description: "Implement lightweight docking metrics that normalize binding score and verify molecular pose geometry.",
+    systems: ["Drug docking", "Hit triage", "Lead optimization"],
+    tasks: ["Ligand Efficiency", "Pose RMSD", "Contact Score"],
+  },
+  {
+    id: "electrical-circuits-signals",
+    title: "Circuits and Signals",
+    category: "ELECTRICAL",
+    description: "Compute RMS, impedance division, and RC response used in sensing, filters, and measurement systems.",
+    systems: ["Power electronics", "Sensor front ends", "Measurement tools"],
+    tasks: ["RMS Value", "Impedance Divider", "RC Step Response"],
+  },
+  {
+    id: "electrical-power-systems",
+    title: "Power Systems",
+    category: "ELECTRICAL",
+    description: "Build power and admittance calculations used in grid planning, microgrids, and energy dashboards.",
+    systems: ["Grid planning", "Microgrids", "Energy management"],
+    tasks: ["Complex Power", "Build Y-Bus Matrix", "DC Power Flow"],
+  },
+  {
+    id: "electrical-control-systems",
+    title: "Control Systems",
+    category: "ELECTRICAL",
+    description: "Implement controller primitives for robotics, motor control, industrial automation, and physical regulation.",
+    systems: ["Robotics", "Motor control", "Automation"],
+    tasks: ["PID Update", "State Feedback", "Stability Margin"],
+  },
+  {
+    id: "electrical-signal-processing",
+    title: "Signal Processing",
+    category: "ELECTRICAL",
+    description: "Implement convolution and filtering tools used to clean sampled signals in real devices.",
+    systems: ["Audio processing", "Medical sensors", "IoT analytics"],
+    tasks: ["Discrete Convolution", "Moving Average", "Low-Pass IIR Filter"],
+  },
+  {
+    id: "electronics-digital-logic",
+    title: "Digital Logic",
+    category: "ELECTRONICS",
+    description: "Implement Boolean primitives that become multiplexers, adders, truth tables, and hardware datapaths.",
+    systems: ["CPUs", "FPGAs", "Hardware verification"],
+    tasks: ["4-to-1 Multiplexer", "Half Adder", "Truth Table from LUT"],
+  },
+  {
+    id: "electronics-sequential-logic",
+    title: "Sequential Logic",
+    category: "ELECTRONICS",
+    description: "Implement next-state logic for flip-flops, counters, timers, and finite-state machines.",
+    systems: ["Protocol controllers", "Timers", "Pipelines"],
+    tasks: ["D Flip-Flop Next State", "Wrapping Counter", "Pattern Detector FSM"],
+  },
+  {
+    id: "electronics-cmos-analog",
+    title: "CMOS and Analog Basics",
+    category: "ELECTRONICS",
+    description: "Estimate switching power, inverter thresholds, and RC delay for chip and board-level intuition.",
+    systems: ["Chip design", "Timing analysis", "Low-power devices"],
+    tasks: ["CMOS Dynamic Power", "Inverter Trip Point", "RC Delay"],
+  },
+  {
+    id: "electronics-embedded-systems",
+    title: "Embedded Systems",
+    category: "ELECTRONICS",
+    description: "Build tiny firmware and datapath primitives for microcontrollers, sensors, and low-level devices.",
+    systems: ["Microcontrollers", "Firmware tools", "Sensor devices"],
+    tasks: ["Tiny ALU", "Decode RV32I Register Fields", "Debounce Samples"],
+  },
 ];
 
 // ─── Modal Component ──────────────────────────────────────────────────────────
@@ -468,7 +606,7 @@ export default function FundamentalsModal({
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24 }}>
           <span
             style={{
-              fontSize: 10, fontWeight: 800, letterSpacing: 2,
+              fontSize: 10, fontWeight: 800, letterSpacing: 0,
               color, background: color + "18",
               border: `1px solid ${color}44`,
               padding: "4px 10px", borderRadius: 6,
@@ -501,12 +639,38 @@ export default function FundamentalsModal({
         </div>
 
         {/* Title & Description */}
-        <h2 style={{ fontSize: 28, fontWeight: 800, color: "white", marginBottom: 10, letterSpacing: "-0.02em" }}>
+        <h2 style={{ fontSize: 28, fontWeight: 800, color: "white", marginBottom: 10, letterSpacing: 0 }}>
           {topic.title}
         </h2>
         <p style={{ fontSize: 14, color: "#888", lineHeight: 1.6, marginBottom: 28 }}>
           {topic.description}
         </p>
+
+        {topic.systems?.length ? (
+          <div style={{ marginBottom: 26 }}>
+            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 0, color: "#666", marginBottom: 10 }}>
+              USED IN REAL SYSTEMS
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {topic.systems.map((system) => (
+                <span
+                  key={system}
+                  style={{
+                    padding: "6px 10px",
+                    borderRadius: 8,
+                    background: color + "12",
+                    border: `1px solid ${color}33`,
+                    color: "#d1d5db",
+                    fontSize: 12,
+                    fontWeight: 600,
+                  }}
+                >
+                  {system}
+                </span>
+              ))}
+            </div>
+          </div>
+        ) : null}
 
         {/* Tasks */}
         <div style={{ marginBottom: 28 }}>
@@ -515,7 +679,7 @@ export default function FundamentalsModal({
               <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
               <polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
             </svg>
-            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, color: "#555" }}>
+            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 0, color: "#555" }}>
               CORE CONCEPTS
             </span>
           </div>
