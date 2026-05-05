@@ -22,6 +22,12 @@ export default async function FundProblemPage({
   if (!result) notFound();
 
   const { topic, task } = result;
+  const topicExplanation = [
+    topic.description,
+    topic.realWorldUse ? `## Real-World Systems\n\n${topic.realWorldUse}` : null,
+    topic.systems?.length ? `Systems: ${topic.systems.join(", ")}` : null,
+    task.whyImplement ? `## Why Implement This\n\n${task.whyImplement}` : null,
+  ].filter(Boolean).join("\n\n");
 
   return (
     <CodingTerminal
@@ -32,7 +38,7 @@ export default async function FundProblemPage({
       tests={task.tests}
       backHref={`/fundamentals/${subject}/${slug}`}
       taskSlug={taskSlug}
-      topicExplanation={topic.description}
+      topicExplanation={topicExplanation}
     />
   );
 }
