@@ -2,6 +2,7 @@ import { ml150Topics } from "./fundamentals-ml150";
 import { numpyTopics } from "./fundamentals-numpy";
 import { pandasTopics } from "./fundamentals-pandas";
 import { pandasExtraTopics } from "./fundamentals-pandas-extra";
+import { domainFundamentalsTopics } from "./fundamentals-domain";
 
 export type Difficulty = "easy" | "medium" | "hard";
 
@@ -14,16 +15,19 @@ export interface FundTask {
   category: string;
   skeleton: string;
   tests: string;
+  whyImplement?: string;
 }
 
 export interface FundTopic {
   slug: string;
-  subject: string; // "ml150" | "numpy" | "pandas"
+  subject: string; // "ml150" | "numpy" | "pandas" | "biology" | "chemistry" | "electrical" | "electronics"
   title: string;
   year: number;
   authors: string[];
   category: string;
   description: string;
+  realWorldUse?: string;
+  systems?: string[];
   tasks: FundTask[];
 }
 
@@ -38,6 +42,7 @@ export const allFundTopics: FundTopic[] = [
   ...numpyTopics,
   ...pandasTopics,
   ...pandasExtraTopics,
+  ...domainFundamentalsTopics,
 ];
 
 export function getFundTopic(subject: string, slug: string): FundTopic | undefined {
