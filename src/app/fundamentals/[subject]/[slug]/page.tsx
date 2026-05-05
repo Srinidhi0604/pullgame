@@ -19,6 +19,10 @@ export default async function FundTopicPage({
     ml150: "ML 150",
     numpy: "NumPy",
     pandas: "Pandas",
+    biology: "Biology",
+    chemistry: "Chemistry",
+    electrical: "Electrical Engineering",
+    electronics: "Electronics",
   };
 
   return (
@@ -33,7 +37,7 @@ export default async function FundTopicPage({
 
       {/* Header */}
       <div className="animate-fade-in" style={{ marginBottom: 40 }}>
-        <h1 style={{ fontSize: "clamp(26px, 5vw, 36px)", fontWeight: 800, letterSpacing: "-0.02em", lineHeight: 1.2, marginBottom: 14 }}>
+        <h1 style={{ fontSize: 36, fontWeight: 800, letterSpacing: 0, lineHeight: 1.2, marginBottom: 14, overflowWrap: "anywhere" }}>
           {subjectLabel[topic.subject] ?? topic.subject}: {topic.title}
         </h1>
 
@@ -47,6 +51,29 @@ export default async function FundTopicPage({
         </div>
 
         <p style={{ fontSize: 15, lineHeight: 1.7, color: "var(--text-secondary)" }}>{topic.description}</p>
+
+        {(topic.realWorldUse || topic.systems?.length) && (
+          <div style={{ marginTop: 24, paddingTop: 22, borderTop: "1px solid var(--border)" }}>
+            <h2 style={{ fontSize: 15, fontWeight: 800, marginBottom: 10 }}>Real-World Systems</h2>
+            {topic.realWorldUse && (
+              <p style={{ fontSize: 14, lineHeight: 1.7, color: "var(--text-secondary)", marginBottom: 14 }}>
+                {topic.realWorldUse}
+              </p>
+            )}
+            {topic.systems?.length ? (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {topic.systems.map((system) => (
+                  <span
+                    key={system}
+                    style={{ padding: "4px 10px", borderRadius: 4, fontSize: 12, fontWeight: 600, background: "rgba(255,255,255,0.07)", color: "var(--text-secondary)" }}
+                  >
+                    {system}
+                  </span>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        )}
       </div>
 
       {/* Implementation Track */}
@@ -70,10 +97,10 @@ export default async function FundTopicPage({
                 <div className={`task-card task-card-${task.difficulty}`}>
                   {/* Number */}
                   <div style={{ flexShrink: 0, textAlign: "center", minWidth: 48 }}>
-                    <div style={{ fontSize: 10, fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 2 }}>
+                    <div style={{ fontSize: 10, fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 0, marginBottom: 2 }}>
                       Task
                     </div>
-                    <div style={{ fontSize: 24, fontWeight: 800, color: "var(--text-muted)", letterSpacing: "-0.02em" }}>
+                    <div style={{ fontSize: 24, fontWeight: 800, color: "var(--text-muted)", letterSpacing: 0 }}>
                       {String(i + 1).padStart(2, "0")}
                     </div>
                   </div>
@@ -84,6 +111,11 @@ export default async function FundTopicPage({
                     <p style={{ fontSize: 13, color: "var(--text-muted)", lineHeight: 1.5 }}>
                       {task.shortDescription}
                     </p>
+                    {task.whyImplement && (
+                      <p style={{ fontSize: 12.5, color: "var(--text-secondary)", lineHeight: 1.55, marginTop: 8 }}>
+                        <strong style={{ color: "var(--text-primary)" }}>Used in systems:</strong> {task.whyImplement}
+                      </p>
+                    )}
                   </div>
 
                   {/* Badges */}
