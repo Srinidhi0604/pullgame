@@ -12,14 +12,15 @@ export function getOriginalPaperUrl(paper: Pick<Paper, "sourceUrl">): string | n
   return paper.sourceUrl ?? null;
 }
 
-export function getEmbeddablePaperUrl(paper: Pick<Paper, "sourceUrl">): string | null {
-  if (!paper.sourceUrl) return null;
+export function getEmbeddablePaperUrl(paper: Pick<Paper, "sourceUrl" | "readerUrl">): string | null {
+  const url = paper.readerUrl ?? paper.sourceUrl;
+  if (!url) return null;
 
-  if (paper.sourceUrl.includes("arxiv.org/abs/")) {
-    return paper.sourceUrl.replace("arxiv.org/abs/", "arxiv.org/pdf/");
+  if (url.includes("arxiv.org/abs/")) {
+    return url.replace("arxiv.org/abs/", "arxiv.org/pdf/");
   }
 
-  return paper.sourceUrl;
+  return url;
 }
 
 export function withPdfFragment(url: string, page: number, zoom: number, search: string): string {
@@ -42,7 +43,7 @@ export function buildReaderCitations(paper: Paper): ReaderCitation[] {
     snippet: paper.description,
   };
 
-  const tasks = paper.tasks.slice(0, 5).map((task, index) => ({
+  const tasks = paper.tasks.slice(0, 10).map((task, index) => ({
     id: `C${index + 2}`,
     label: task.title,
     page: index + 2,
@@ -67,7 +68,7 @@ export function makeStarterQuestions(paper: Paper): string[] {
 }
 
 export function makeInitialNotes(paper: Paper): string {
-  const tasks = paper.tasks.slice(0, 5).map((task) => `- [ ] ${task.title}`).join("\n");
+  const tasks = paper.tasks.slice(0, 10).map((task) => `- [ ] ${task.title}`).join("\n");
 
   return `# ${paper.title}
 
