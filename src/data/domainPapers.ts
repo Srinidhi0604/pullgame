@@ -544,6 +544,19 @@ const chemistrySpecs: PaperSpec[] = [
 
 const electricalSpecs: PaperSpec[] = [
   {
+    slug: "lookup-table-optimization-sensor-linearization",
+    title: "Lookup Table Optimization for Sensor Linearization in Small Embedded Systems",
+    year: 2012,
+    authors: ["Bengtsson"],
+    track: "electrical",
+    tags: ["Electrical Learning", "Sensor Linearization", "Lookup Tables", "Embedded Systems"],
+    description: "Bengtsson gives a practical method for shrinking sensor-linearization lookup tables in small embedded systems: keep a sparse table, use piecewise linear interpolation for missing entries, and choose the decimation factor so interpolation error stays below the stored entry precision.",
+    sourceUrl: "https://www.scirp.org/journal/paperinformation?paperid=25530",
+    readerUrl: "https://content.scirp.org/pdf/jst20120400001_59411693.pdf",
+    visual: "signals",
+    kind: "sensor-linearization",
+  },
+  {
     slug: "tinney-hart-newton-power-flow",
     title: "Power Flow Solution by Newton's Method",
     year: 1967,
@@ -806,6 +819,7 @@ function makePaper(spec: PaperSpec, index: number): Paper {
     description: spec.description,
     track: spec.track,
     sourceUrl: spec.sourceUrl,
+    readerUrl: spec.readerUrl,
     repositoryUrl: spec.repositoryUrl,
     visual: {
       variant: spec.visual,
