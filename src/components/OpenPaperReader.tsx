@@ -705,7 +705,7 @@ This project is centered on ${paper.title}. Use the current paper as the impleme
             </div>
 
             <div className="openpaper-source-strip">
-              {citations.slice(0, 6).map((citation) => (
+              {citations.slice(0, 11).map((citation) => (
                 <button
                   key={citation.id}
                   type="button"
@@ -797,7 +797,7 @@ This project is centered on ${paper.title}. Use the current paper as the impleme
                   <section>
                     <h3>Reading Flow</h3>
                     <ol>
-                      {paper.tasks.slice(0, 5).map((task, index) => (
+                      {paper.tasks.slice(0, 10).map((task, index) => (
                         <li key={task.slug}>
                           <Link href={`/papers/${paper.slug}/problems/${task.slug}`}>{task.title}</Link>
                           <span>{renderCitedText(` [C${index + 2}]`, citations, focusCitation)}</span>
