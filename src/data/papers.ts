@@ -53,6 +53,7 @@ export interface Paper {
   tasks: Task[];
   track?: PaperTrack;
   sourceUrl?: string;
+  readerUrl?: string;
   repositoryUrl?: string;
   visual?: PaperVisual;
 }
