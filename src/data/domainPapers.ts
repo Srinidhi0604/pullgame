@@ -21,6 +21,7 @@ type TaskKind =
   | "machines"
   | "grid"
   | "filter"
+  | "sensor-linearization"
   | "logic"
   | "sequential"
   | "cmos"
@@ -39,6 +40,7 @@ interface PaperSpec {
   tags: string[];
   description: string;
   sourceUrl: string;
+  readerUrl?: string;
   repositoryUrl?: string;
   visual: PaperVisual["variant"];
   kind: TaskKind;
