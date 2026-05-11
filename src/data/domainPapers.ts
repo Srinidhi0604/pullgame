@@ -888,6 +888,8 @@ function makeTasks(spec: PaperSpec, index: number): Task[] {
       return [mpptTask(spec, solveBase), droopTask(spec, solveBase + 3)];
     case "filter":
       return [rcLowpassTask(spec, solveBase), cutoffTask(spec, solveBase + 3)];
+    case "sensor-linearization":
+      return sensorLinearizationTasks(spec, solveBase);
     case "logic":
       return [muxTask(spec, solveBase), truthTableTask(spec, solveBase + 3)];
     case "sequential":
@@ -1564,5 +1566,131 @@ function bandgapTask(spec: PaperSpec, solveCount: number): Task {
     # YOUR CODE HERE
     raise NotImplementedError`, `def test_bandgap_reference_output():
     assert abs(bandgap_reference_output(0.7, 0.026, 20) - 1.22) < 1e-8
+    print("All tests passed!")`, solveCount);
+}
+
+function sensorLinearizationTasks(spec: PaperSpec, solveBase: number): Task[] {
+  return [
+    decimateCalibrationLutTask(spec, solveBase),
+    lutMemoryFootprintTask(spec, solveBase + 3),
+    piecewiseLinearEstimateTask(spec, solveBase + 6),
+    secondDifferenceCurvatureTask(spec, solveBase + 9),
+    interpolationRemainderTask(spec, solveBase + 12),
+    chooseDecimationFactorTask(spec, solveBase + 15),
+    splitAdcBitsTask(spec, solveBase + 18),
+    fixedPointLutInterpolationTask(spec, solveBase + 21),
+  ];
+}
+
+function decimateCalibrationLutTask(spec: PaperSpec, solveCount: number): Task {
+  return task(spec, "decimate-calibration-lut", "Decimate Calibration LUT", "easy", "Sensor Linearization", "Build a sparse lookup table by retaining every stride-th calibration value and appending the final endpoint when it is missing.", `import numpy as np
+
+def decimate_calibration_lut(full_lut, stride):
+    # YOUR CODE HERE
+    raise NotImplementedError`, `import numpy as np
+
+def test_decimate_calibration_lut():
+    full = np.arange(17) ** 2
+    sparse = decimate_calibration_lut(full, 4)
+    np.testing.assert_array_equal(sparse, np.array([0, 16, 64, 144, 256]))
+
+    sparse2 = decimate_calibration_lut(np.arange(10), 4)
+    np.testing.assert_array_equal(sparse2, np.array([0, 4, 8, 9]))
+    print("All tests passed!")`, solveCount);
+}
+
+function lutMemoryFootprintTask(spec: PaperSpec, solveCount: number): Task {
+  return task(spec, "lut-memory-footprint", "LUT Memory Footprint", "easy", "Embedded Memory", "Compute full-table bytes, sparse-table bytes, and bytes saved for an ADC LUT decimated by a power-of-two stride.", `import math
+
+def lut_memory_footprint(adc_bits, entry_bits, stride):
+    # Return (full_bytes, sparse_bytes, bytes_saved)
+    # YOUR CODE HERE
+    raise NotImplementedError`, `def test_lut_memory_footprint():
+    full, sparse, saved = lut_memory_footprint(10, 16, 4)
+    assert full == 128
+    assert sparse == 48
+    assert saved == 80
+    print("All tests passed!")`, solveCount);
+}
+
+function piecewiseLinearEstimateTask(spec: PaperSpec, solveCount: number): Task {
+  return task(spec, "piecewise-linear-estimate", "Piecewise Linear Estimate", "medium", "Sensor Linearization", "Linearly interpolate missing sensor values between stored LUT entries.", `import numpy as np
+
+def piecewise_linear_estimate(sparse_lut, x_target):
+    # Return interpolated value at x_target
+    # YOUR CODE HERE
+    raise NotImplementedError`, `import numpy as np
+
+def test_piecewise_linear_estimate():
+    sparse = np.array([0.0, 10.0, 30.0])
+    assert piecewise_linear_estimate(sparse, 0.5) == 5.0
+    assert piecewise_linear_estimate(sparse, 1.5) == 20.0
+    assert piecewise_linear_estimate(sparse, 2.0) == 30.0
+    print("All tests passed!")`, solveCount);
+}
+
+function secondDifferenceCurvatureTask(spec: PaperSpec, solveCount: number): Task {
+  return task(spec, "second-difference-curvature", "Second Difference Curvature", "medium", "Signal Analysis", "Compute second difference to estimate local curvature for LUT decimation decisions.", `import numpy as np
+
+def second_difference_curvature(y_values):
+    # Return array of second differences
+    # YOUR CODE HERE
+    raise NotImplementedError`, `import numpy as np
+
+def test_second_difference_curvature():
+    y = np.array([0, 1, 4, 9, 16])
+    curv = second_difference_curvature(y)
+    np.testing.assert_array_almost_equal(curv, np.array([2, 2, 2]))
+    print("All tests passed!")`, solveCount);
+}
+
+function interpolationRemainderTask(spec: PaperSpec, solveCount: number): Task {
+  return task(spec, "interpolation-remainder", "Interpolation Remainder", "medium", "Error Analysis", "Calculate interpolation error between true and estimated sensor values.", `import numpy as np
+
+def interpolation_remainder(true_values, sparse_lut, indices):
+    # Return max absolute error using piecewise linear approximation
+    # YOUR CODE HERE
+    raise NotImplementedError`, `import numpy as np
+
+def test_interpolation_remainder():
+    true_vals = np.array([0, 1, 4, 9, 16])
+    sparse = np.array([0, 4, 16])
+    inds = np.array([0, 2, 4])
+    err = interpolation_remainder(true_vals, sparse, inds)
+    assert err > 0
+    print("All tests passed!")`, solveCount);
+}
+
+function chooseDecimationFactorTask(spec: PaperSpec, solveCount: number): Task {
+  return task(spec, "choose-decimation-factor", "Choose Decimation Factor", "medium", "Optimization", "Select the largest decimation factor where interpolation error remains below sensor precision.", `def choose_decimation_factor(adc_bits, max_error_lsb):
+    # Return stride that keeps error within max_error_lsb
+    # YOUR CODE HERE
+    raise NotImplementedError`, `def test_choose_decimation_factor():
+    stride = choose_decimation_factor(10, 0.5)
+    assert stride > 0
+    assert stride <= (1 << 10)
+    print("All tests passed!")`, solveCount);
+}
+
+function splitAdcBitsTask(spec: PaperSpec, solveCount: number): Task {
+  return task(spec, "split-adc-bits", "Split ADC Bits", "easy", "Bit Manipulation", "Split ADC result into high bits for LUT index and low bits for interpolation offset.", `def split_adc_bits(adc_result, stride_bits):
+    # Return (lut_index, interp_offset)
+    # YOUR CODE HERE
+    raise NotImplementedError`, `def test_split_adc_bits():
+    idx, off = split_adc_bits(0b1101_0110, 3)
+    assert idx == 0b1101
+    assert off == 0b0110
+    print("All tests passed!")`, solveCount);
+}
+
+function fixedPointLutInterpolationTask(spec: PaperSpec, solveCount: number): Task {
+  return task(spec, "fixed-point-lut-interpolation", "Fixed-Point LUT Interpolation", "hard", "Embedded Implementation", "Implement efficient fixed-point interpolation for resource-constrained embedded ADC linearization.", `def fixed_point_lut_interpolation(lut_table, raw_adc, stride, frac_bits):
+    # Return linearized value in fixed-point format
+    # YOUR CODE HERE
+    raise NotImplementedError`, `def test_fixed_point_lut_interpolation():
+    lut = [0, 1000, 2010, 3030, 4060]
+    result = fixed_point_lut_interpolation(lut, 0b10_0101, 2, 8)
+    assert isinstance(result, int)
+    assert result > 0
     print("All tests passed!")`, solveCount);
 }
