@@ -4,6 +4,10 @@
 
 /**
  * Format a date to readable string
+ * @param date - The date to format (Date object or ISO string)
+ * @returns Formatted date string (e.g., "January 15, 2024")
+ * @example
+ * formatDate(new Date()) // "January 15, 2024"
  */
 export function formatDate(date: Date | string): string {
   const d = new Date(date);
@@ -16,6 +20,10 @@ export function formatDate(date: Date | string): string {
 
 /**
  * Format a date with time
+ * @param date - The date to format (Date object or ISO string)
+ * @returns Formatted date-time string (e.g., "Jan 15, 2024, 02:30 PM")
+ * @example
+ * formatDateTime(new Date()) // "Jan 15, 2024, 02:30 PM"
  */
 export function formatDateTime(date: Date | string): string {
   const d = new Date(date);
@@ -30,6 +38,10 @@ export function formatDateTime(date: Date | string): string {
 
 /**
  * Format relative time (e.g., "2 hours ago")
+ * @param date - The date to format relative to now
+ * @returns Relative time string (e.g., "2h ago", "just now")
+ * @example
+ * formatRelativeTime(new Date(Date.now() - 2*60*60*1000)) // "2h ago"
  */
 export function formatRelativeTime(date: Date | string): string {
   const d = new Date(date);
@@ -50,7 +62,12 @@ export function formatRelativeTime(date: Date | string): string {
 }
 
 /**
- * Truncate text to specified length
+ * Truncate text to specified length with ellipsis
+ * @param text - The text to truncate
+ * @param maxLength - Maximum length (default: 50)
+ * @returns Truncated text with "..." if exceeded
+ * @example
+ * truncateText("Hello World", 5) // "Hello..."
  */
 export function truncateText(text: string, maxLength: number = 50): string {
   if (text.length <= maxLength) return text;
@@ -59,6 +76,10 @@ export function truncateText(text: string, maxLength: number = 50): string {
 
 /**
  * Capitalize first letter of string
+ * @param str - The string to capitalize
+ * @returns String with first letter capitalized
+ * @example
+ * capitalize("hello") // "Hello"
  */
 export function capitalize(str: string): string {
   if (!str) return "";
@@ -66,7 +87,10 @@ export function capitalize(str: string): string {
 }
 
 /**
- * Generate a random ID
+ * Generate a random ID string
+ * @returns Random alphanumeric ID
+ * @example
+ * generateId() // "a1b2c3d4e"
  */
 export function generateId(): string {
   return Math.random().toString(36).substring(2, 11);
@@ -74,6 +98,10 @@ export function generateId(): string {
 
 /**
  * Delay execution for specified milliseconds
+ * @param ms - Number of milliseconds to delay
+ * @returns Promise that resolves after delay
+ * @example
+ * await delay(1000); // Waits 1 second
  */
 export async function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -81,6 +109,11 @@ export async function delay(ms: number): Promise<void> {
 
 /**
  * Check if object is empty
+ * @param obj - Object to check
+ * @returns True if object has no keys
+ * @example
+ * isEmpty({}) // true
+ * isEmpty({a: 1}) // false
  */
 export function isEmpty(obj: Record<string, unknown>): boolean {
   return Object.keys(obj).length === 0;
@@ -88,6 +121,10 @@ export function isEmpty(obj: Record<string, unknown>): boolean {
 
 /**
  * Format file size in bytes to readable format
+ * @param bytes - Number of bytes
+ * @returns Formatted size string (e.g., "1.50 MB")
+ * @example
+ * formatFileSize(1048576) // "1.00 MB"
  */
 export function formatFileSize(bytes: number): string {
   const units = ["B", "KB", "MB", "GB"];
@@ -103,7 +140,12 @@ export function formatFileSize(bytes: number): string {
 }
 
 /**
- * Debounce a function
+ * Debounce a function - delay execution until called no more
+ * @param func - Function to debounce
+ * @param delayMs - Delay in milliseconds
+ * @returns Debounced function
+ * @example
+ * const debouncedSearch = debounce(handleSearch, 300);
  */
 export function debounce<T extends (...args: unknown[]) => unknown>(
   func: T,
