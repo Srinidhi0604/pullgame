@@ -91,3 +91,74 @@ export function validateRequiredEnvVars(keys: string[]): void {
     );
   }
 }
+
+/**
+ * Validate configuration object
+ */
+export interface ConfigValidationResult {
+  valid: boolean;
+  errors: string[];
+}
+
+export function validateConfig(): ConfigValidationResult {
+  const errors: string[] = [];
+
+  // Check required environment variables
+  const requiredVars = ["MONGODB_URI", "JWT_SECRET"];
+  const missing = requiredVars.filter((key) => !process.env[key]);
+  if (missing.length > 0) {
+    errors.push(`Missing required environment variables: ${missing.join(", ")}`);
+  }
+
+  // Validate MongoDB URI format
+  const mongodbUri = process.env.MONGODB_URI;
+  if (mongodbUri && !mongodbUri.startsWith("mongodb")) {
+    errors.push("Invalid MONGODB_URI format");
+  }
+
+  // Validate JWT secret length
+  const jwtSecret = process.env.JWT_SECRET;
+  if (jwtSecret && jwtSecret.length < 16) {
+    errors.push("JWT_SECRET must be at least 16 characters");
+  }
+
+  // Validate port number
+  const apiPort = getEnvNumber("API_PORT", 3000);
+  if (apiPort < 1 || apiPort > 65535) {
+    errors.push("API_PORT must be between 1 and 65535");
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+  };
+}
+
+/**
+ * Get configuration with validation
+ */
+export function getValidatedConfig() {
+  const validation = validateConfig();
+
+  if (!validation.valid) {
+    throw new Error(`Configuration validation failed: ${validation.errors.join("; ")}`);
+  }
+
+  return getAppConfig();
+}
+
+/**
+ * Log configuration (safe - no secrets)
+ */
+export function logConfig(): void {
+  const config = {
+    nodeEnv: process.env.NODE_ENV,
+    apiPort: getEnvNumber("API_PORT", 3000),
+    isDev: isDevelopment(),
+    isProd: isProduction(),
+    jwtSecretLength: process.env.JWT_SECRET?.length || 0,
+    mongodbUriSet: !!process.env.MONGODB_URI,
+  };
+
+  console.log("Application Configuration:", config);
+}
