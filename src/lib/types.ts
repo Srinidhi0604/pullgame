@@ -1,6 +1,20 @@
 /**
- * Shared TypeScript types and interfaces
+ * Shared TypeScript types and interfaces for PaperLabs application
  */
+
+// Domain Enums
+export enum Domain {
+  ML = "machine-learning",
+  BIOLOGY = "biology",
+  CHEMISTRY = "chemistry",
+  EE = "electrical-engineering",
+}
+
+export enum DifficultyLevel {
+  BEGINNER = "beginner",
+  INTERMEDIATE = "intermediate",
+  ADVANCED = "advanced",
+}
 
 // User Types
 export interface User {
