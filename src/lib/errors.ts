@@ -87,6 +87,36 @@ export class ServerError extends AppError {
 }
 
 /**
+ * Database error
+ */
+export class DatabaseError extends AppError {
+  constructor(message: string = "Database operation failed") {
+    super(500, message);
+    Object.setPrototypeOf(this, DatabaseError.prototype);
+  }
+}
+
+/**
+ * Timeout error
+ */
+export class TimeoutError extends AppError {
+  constructor(message: string = "Request timeout") {
+    super(408, message);
+    Object.setPrototypeOf(this, TimeoutError.prototype);
+  }
+}
+
+/**
+ * Bad gateway error
+ */
+export class BadGatewayError extends AppError {
+  constructor(message: string = "Service unavailable") {
+    super(502, message);
+    Object.setPrototypeOf(this, BadGatewayError.prototype);
+  }
+}
+
+/**
  * Check if error is operational (expected error)
  */
 export function isOperationalError(error: unknown): boolean {
@@ -94,4 +124,26 @@ export function isOperationalError(error: unknown): boolean {
     return error.isOperational;
   }
   return false;
+}
+
+/**
+ * Format error for logging
+ */
+export function formatErrorForLogging(error: unknown): object {
+  if (error instanceof AppError) {
+    return {
+      statusCode: error.statusCode,
+      message: error.message,
+      isOperational: error.isOperational,
+      type: error.constructor.name,
+    };
+  }
+  if (error instanceof Error) {
+    return {
+      message: error.message,
+      stack: error.stack,
+      type: error.constructor.name,
+    };
+  }
+  return { error: String(error) };
 }
