@@ -109,3 +109,85 @@ export function withCache(ttlSeconds: number = 300) {
     return descriptor;
   };
 }
+
+/**
+ * Cache invalidation manager for related cache keys
+ */
+export class CacheInvalidationManager {
+  private dependencies: Map<string, Set<string>> = new Map();
+
+  /**
+   * Register cache key dependency
+   */
+  registerDependency(key: string, dependentKey: string): void {
+    if (!this.dependencies.has(key)) {
+      this.dependencies.set(key, new Set());
+    }
+    this.dependencies.get(key)?.add(dependentKey);
+  }
+
+  /**
+   * Invalidate cache key and all dependent keys
+   */
+  invalidate(key: string, cache: CacheManager): void {
+    cache.delete(key);
+    const dependents = this.dependencies.get(key);
+    if (dependents) {
+      for (const dependent of dependents) {
+        cache.delete(dependent);
+        this.invalidate(dependent, cache);
+      }
+    }
+  }
+
+  /**
+   * Invalidate multiple keys by pattern
+   */
+  invalidateByPattern(pattern: RegExp, cache: CacheManager): number {
+    let count = 0;
+    // Note: This would require access to cache internals in production
+    // For now, it's a placeholder for pattern-based invalidation
+    return count;
+  }
+
+  /**
+   * Clear all dependencies
+   */
+  clear(): void {
+    this.dependencies.clear();
+  }
+}
+
+/**
+ * Global cache invalidation manager
+ */
+export const cacheInvalidation = new CacheInvalidationManager();
+
+/**
+ * Common cache key builders for consistent key generation
+ */
+export const cacheKeys = {
+  user: (userId: string) => `user:${userId}`,
+  userEmail: (email: string) => `user:email:${email}`,
+  paper: (paperId: string) => `paper:${paperId}`,
+  papers: (filters: string) => `papers:${filters}`,
+  problem: (problemId: string) => `problem:${problemId}`,
+  problems: (filters: string) => `problems:${filters}`,
+  leaderboard: (page: number, pageSize: number) => `leaderboard:${page}:${pageSize}`,
+  search: (query: string) => `search:${query}`,
+};
+
+/**
+ * Utility to invalidate user-related caches
+ */
+export function invalidateUserCache(userId: string): void {
+  globalCache.delete(cacheKeys.user(userId));
+}
+
+/**
+ * Utility to invalidate paper-related caches
+ */
+export function invalidatePaperCaches(): void {
+  // Clear paper caches - in production, this would use pattern matching
+  globalCache.cleanup();
+}
