@@ -129,3 +129,32 @@ export function validateRequired<T extends Record<string, unknown>>(
   const missingFields = fields.filter((field) => !obj[field]);
   return { valid: missingFields.length === 0, missingFields };
 }
+
+/**
+ * Validation schemas for common data models
+ */
+export const VALIDATION_SCHEMAS = {
+  user: {
+    username: { min: 3, max: 20 },
+    email: { pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ },
+    password: { min: 8, requireUpperCase: true, requireNumbers: true },
+    bio: { max: 500 },
+  },
+  paper: {
+    title: { min: 5, max: 200 },
+    abstract: { min: 10, max: 5000 },
+    authors: { minItems: 1, maxItems: 20 },
+    year: { min: 1900, max: 2100 },
+    tags: { minItems: 1, maxItems: 10 },
+  },
+  problem: {
+    title: { min: 5, max: 200 },
+    description: { min: 10, max: 10000 },
+    initialCode: { max: 50000 },
+    testCases: { minItems: 1 },
+  },
+  review: {
+    rating: { min: 1, max: 5 },
+    comment: { min: 1, max: 1000 },
+  },
+} as const;
