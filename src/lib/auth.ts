@@ -65,3 +65,71 @@ export function generateSessionPayload(userId: string, username: string) {
     iat: Math.floor(Date.now() / 1000),
   };
 }
+
+/**
+ * Validate token format and structure
+ */
+export function isValidTokenFormat(token: string): boolean {
+  const parts = token.split(".");
+  return parts.length === 3;
+}
+
+/**
+ * Get token expiration time
+ */
+export function getTokenExpiration(token: string): Date | null {
+  const payload = verifyToken(token);
+  if (!payload || !payload.exp) return null;
+  return new Date(payload.exp * 1000);
+}
+
+/**
+ * Check if token is expired
+ */
+export function isTokenExpired(token: string): boolean {
+  const expiration = getTokenExpiration(token);
+  if (!expiration) return true;
+  return expiration < new Date();
+}
+
+/**
+ * Validate password strength requirements
+ */
+export function validatePasswordStrength(password: string): {
+  valid: boolean;
+  errors: string[];
+} {
+  const errors: string[] = [];
+
+  if (password.length < 8) {
+    errors.push("Password must be at least 8 characters long");
+  }
+  if (!/[A-Z]/.test(password)) {
+    errors.push("Password must contain at least one uppercase letter");
+  }
+  if (!/[a-z]/.test(password)) {
+    errors.push("Password must contain at least one lowercase letter");
+  }
+  if (!/\d/.test(password)) {
+    errors.push("Password must contain at least one number");
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+  };
+}
+
+/**
+ * Safe token verification with error handling
+ */
+export function safeVerifyToken(token: string): JwtPayload | null {
+  try {
+    if (!isValidTokenFormat(token)) {
+      return null;
+    }
+    return verifyToken(token);
+  } catch {
+    return null;
+  }
+}
