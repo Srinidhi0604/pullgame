@@ -102,3 +102,75 @@ export async function batchProcess<T, R>(
 
   return results;
 }
+
+/**
+ * Safe database operation wrapper with error handling
+ */
+export async function safeDbOperation<T>(
+  operation: string,
+  fn: () => Promise<T>
+): Promise<{ success: boolean; data?: T; error?: string }> {
+  try {
+    const data = await fn();
+    return { success: true, data };
+  } catch (error) {
+    console.error(`Database operation failed: ${operation}`, error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown database error";
+    return { success: false, error: errorMessage };
+  }
+}
+
+/**
+ * Handle duplicate key error from MongoDB
+ */
+export function isDuplicateKeyError(error: unknown): boolean {
+  if (error instanceof Error) {
+    return error.message.includes("E11000") || error.message.includes("duplicate key");
+  }
+  return false;
+}
+
+/**
+ * Handle validation error from MongoDB
+ */
+export function isValidationError(error: unknown): boolean {
+  if (error instanceof Error) {
+    return error.message.includes("ValidationError") || error.message.includes("validation");
+  }
+  return false;
+}
+
+/**
+ * Handle connection error
+ */
+export function isConnectionError(error: unknown): boolean {
+  if (error instanceof Error) {
+    return error.message.includes("ECONNREFUSED") || error.message.includes("connection");
+  }
+  return false;
+}
+
+/**
+ * Retry database operation with exponential backoff
+ */
+export async function retryDbOperation<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  delayMs: number = 1000
+): Promise<T> {
+  let lastError: Error | unknown;
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      if (attempt < maxRetries - 1) {
+        const delay = delayMs * Math.pow(2, attempt);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    }
+  }
+
+  throw lastError;
+}
