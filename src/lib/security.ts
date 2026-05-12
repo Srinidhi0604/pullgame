@@ -113,3 +113,77 @@ export function verifySignedUrl(url: string, secret: string): boolean {
   const expectedSignature = hashString(`${path}${expiresAt}${secret}`);
   return signature === expectedSignature;
 }
+
+/**
+ * Sanitize string for SQL injection prevention
+ */
+export function sanitizeForSql(input: string): string {
+  return input.replace(/'/g, "''").replace(/"/g, '\\"');
+}
+
+/**
+ * Check if URL is safe and not a potential security risk
+ */
+export function isSafeUrl(url: string, baseUrl: string): boolean {
+  try {
+    const urlObj = new URL(url, baseUrl);
+    const baseUrlObj = new URL(baseUrl);
+    return urlObj.hostname === baseUrlObj.hostname;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Encrypt data using AES
+ */
+export function encryptData(data: string, key: string): string {
+  const iv = crypto.randomBytes(16);
+  const hash = crypto.createHash("sha256").update(key).digest();
+  const cipher = crypto.createCipheriv("aes-256-cbc", hash, iv);
+
+  let encrypted = cipher.update(data, "utf8", "hex");
+  encrypted += cipher.final("hex");
+
+  return iv.toString("hex") + ":" + encrypted;
+}
+
+/**
+ * Decrypt data using AES
+ */
+export function decryptData(encryptedData: string, key: string): string {
+  const parts = encryptedData.split(":");
+  const iv = Buffer.from(parts[0], "hex");
+  const encrypted = parts[1];
+  const hash = crypto.createHash("sha256").update(key).digest();
+
+  const decipher = crypto.createDecipheriv("aes-256-cbc", hash, iv);
+  let decrypted = decipher.update(encrypted, "hex", "utf8");
+  decrypted += decipher.final("utf8");
+
+  return decrypted;
+}
+
+/**
+ * Create secure HTTP-only cookie string
+ */
+export function createSecureCookie(name: string, value: string, maxAge: number): string {
+  return `${name}=${value}; Max-Age=${maxAge}; HttpOnly; Secure; SameSite=Strict; Path=/`;
+}
+
+/**
+ * Extract IP from request headers
+ */
+export function getClientIp(headers: Record<string, unknown>): string {
+  const xForwardedFor = headers["x-forwarded-for"];
+  if (xForwardedFor && typeof xForwardedFor === "string") {
+    return xForwardedFor.split(",")[0].trim();
+  }
+
+  const xRealIp = headers["x-real-ip"];
+  if (xRealIp && typeof xRealIp === "string") {
+    return xRealIp;
+  }
+
+  return "unknown";
+}
